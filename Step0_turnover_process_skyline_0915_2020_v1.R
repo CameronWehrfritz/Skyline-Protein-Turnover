@@ -58,8 +58,8 @@ df <- df %>%
 
 #------------------------------------------------------------------------------------
 # Set Default Values 
-## these may be user defined in the future
 
+## these may be user defined in the future
 min.abundance <- 10**(-5) # minimum abundance
 resolution <- 0.1 # resolution for distinguishing peaks
 p.tolerance <- 0.05 # tolerance for combining masses in observed data
@@ -889,7 +889,7 @@ write.csv(df.solutions, file="df_solutions_date_test.csv", row.names = FALSE)
 
 
 #------------------------------------------------------------------------------------
-# remove rows with NA, which drops all rows which have 'NA' FBC solution
+# remove rows with NA, which drops all rows which have 'NA' for FBC solution
 df.solutions <- df.solutions %>%
   na.omit()
 
@@ -1234,7 +1234,6 @@ write.csv(df.areas.one.l , "Step0_Data_Output_Skyline_singleleucine_peps_test.cs
 ## we will want to do this automatically (not manually as it is here below) directly from the skyline input at the beginning of this script
 df.pp.medians <- df.pp.medians %>%
   mutate(Condition = fct_relevel(Condition, "OCon_D3", "OCR_D3", "OCon_D7", "OCR_D7", "OCon_D12", "OCR_D12", "OCon_D17", "OCR_D17"))
-
 
 # plots:
 
