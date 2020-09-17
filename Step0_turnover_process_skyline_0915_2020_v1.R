@@ -895,10 +895,23 @@ df.solutions <- df.solutions %>%
 
 # clean up df.solutions - for successive R scripts
 df.solutions <- df.solutions %>%
+  dplyr::filter(Number.Heavy.Leucines<5) %>% # keep rows with at most 4 heavy leucines
   dplyr::rename(Cohort=Condition) %>% # rename Condition to Cohort, this matches the nomenclature of the successive R scripts
   dplyr::rename(Modified.Peptide.Seq=Modified.Peptide) %>% # adjust this name for future steps
   dplyr::mutate(Condition=paste0(Cohort, "_D", Timepoint)) %>% # create new Condition column, by merging cohort with timepoint and including "D" for day
-  dplyr::mutate(Total.Replicate.Name=paste0(Condition, "_", Replicate.Name)) # create new Total.Replicate.Name column
+  dplyr::mutate(Total.Replicate.Name=paste0(Condition, "_", Replicate.Name)) %>% # create new Total.Replicate.Name column
+  dplyr::mutate(Area.Number.Heavy.Leucines=paste0("Area", Number.Heavy.Leucines)) # create new column for casting to wide format later
+  
+# store max number of heavy leucines in df.solutions
+max.num.heavy.leucine <- max(df.solutions$Number.Heavy.Leucines)
+
+# column names of heavy labeled areas
+# retain up to Area4 at most (any heavier labelled areas are unnecessary)
+# if max.num.heavy.leucine is greater than 4 then retain Area0 to Area4
+# else retain up to max.num.heavy.leucine
+if(max.num.heavy.leucine>4){
+  heavy.label.areas <- paste0("Area", 1:4)
+} else{heavy.label.areas <- paste0("Area", 1:max.num.heavy.leucine)}
 #------------------------------------------------------------------------------------
 
 
@@ -914,24 +927,20 @@ df.solutions.filtered <- df.solutions %>%
   filter(Isotope.Dot.Product>IDP.threshold)
 #------------------------------------------------------------------------------------
 
-# from step0 skyline v11:
+
 
 #------------------------------------------------------------------------------------
 # Create Area data frame with FBC solutions cast in wide format for each peptide
-df.areas.charge <- dcast(data = df.solutions.filtered, formula = Protein.Accession + Protein.Gene + Replicate.Name + Total.Replicate.Name + Cohort + Condition + Timepoint + Modified.Peptide.Seq + Product.Charge ~ Number.Heavy.Leucines , value.var=c("FBC.Solution")) %>% # wide format cast
-  dplyr::rename("Area0"=`0`, "Area1"=`1`, "Area2"=`2`, "Area3"=`3`, "Area4"=`4`) %>% # rename Areas 0-4 since we will use these areas in future steps (5+ will not be used, at least for now)
-  mutate("Number.Leucine"= map_dbl(Modified.Peptide.Seq, leucine.count.fun)) %>% # Add Number of Leucine column
-  select(-c(`5`,`6`)) %>% # drop the unnecessary areas (we will only be using 0-4 leucine areas)
+df.areas.charge <- dcast(data = df.solutions.filtered, formula = Protein.Accession + Protein.Gene + Replicate.Name + Total.Replicate.Name + Cohort + Condition + Timepoint + Modified.Peptide.Seq + Product.Charge ~ Area.Number.Heavy.Leucines , value.var=c("FBC.Solution")) %>% # wide format cast
+  mutate("Number.Leucine"= map_dbl(Modified.Peptide.Seq, leucine.count.fun)) %>% # add Number of Leucine column
   filter(!is.na(Area0)) %>% # keep only rows with a non-NA Area0
-  mutate(Percent.Label = rowSums(select(., c("Area1", "Area2", "Area3", "Area4")), na.rm=TRUE)/rowSums(select(., contains("Area")), na.rm=TRUE)) # create new column `Percent.Label`=Label Area/Total Area
-
+  mutate(Percent.Label = rowSums(select(., all_of(heavy.label.areas)), na.rm=TRUE)/rowSums(select(., contains("Area")), na.rm=TRUE)) # create new column `Percent.Label`=Label Area/Total Area
 
 # split off the 1 Leucine data; we won't be able to calculate individual `precursor pool` with this data but we can 
 # back calculate the `% new synthesized` once we have calculated the `median precursor pools` for each Condition with the other data containing 2-4 leucines
 df.areas.one.l <- df.areas.charge %>%
   filter(Number.Leucine==1 & !is.na(Area0) & !is.na(Area1)) %>% # keep all peptides with 1 Leucine where both Area0 and Area1 are not NA
-  # select(c("Protein.Accession", "Protein.Gene", "Replicate.Name", "Condition", "Timepoint", "Modified.Peptide.Seq", "Product.Charge", "Area0", "Area1" ))  ## Modified.Peptide.Seq -> drop "Seq"
-  select(-Area2, -Area3, -Area4)
+  select(-c(heavy.label.areas[-1])) # drop heavy leucine columns above Area1
 
 # for the rest of the data, keep peptides with 2, 3 or 4 leucines 
 # this data will be used to calculate individual `precursor pool` for each peptide
@@ -1041,7 +1050,7 @@ for(i in 1:length(unique(df.areas.charge$Replicate.Name))){
       
       # Declare P, the heavy-labelled data which will match against theoretical distribution using distmat (Euclidean distance function)
       P <- df.loop %>%
-        select(c("Area1", "Area2", "Area3", "Area4")) %>% # keep only Areas for 1,2,3 and 4 heavy labels (drop unlabelled Area)
+        select(heavy.label.areas) %>% # keep only heavy label areas
         discard(is.na(.)) %>% # drop all NA elements
         sum.to.one.fun() %>% # normalize data
         as.numeric(.) %>% # force numeric
@@ -1092,7 +1101,7 @@ df.pp.grouped <- df.precursor.pool %>%
 # first convert to data frame
 df.pp.grouped <- as.data.frame(df.pp.grouped)
 
-## this part needs to be updated to occur automatically - not manually
+## this part needs to be updated to be more general for any conditions that are present in the data
 df.pp.medians <- data.frame(Condition = c("OCon_D3", "OCon_D7", "OCon_D12", "OCon_D17", "OCR_D3", "OCR_D7", "OCR_D12", "OCR_D17"), 
                             Precursor.Pool = 
                               c(median(as.numeric(df.pp.grouped[ grepl("OCon_D3", df.pp.grouped$Total.Replicate.Name), "Median.PP"])),
@@ -1231,7 +1240,7 @@ write.csv(df.areas.one.l , "Step0_Data_Output_Skyline_singleleucine_peps_test.cs
 # PLOTS
 
 # first, relevel df.pp.medians factors - for plotting median precursor pool lines
-## we will want to do this automatically (not manually as it is here below) directly from the skyline input at the beginning of this script
+## we will want to do this more generally directly from the skyline input at the beginning of this script
 df.pp.medians <- df.pp.medians %>%
   mutate(Condition = fct_relevel(Condition, "OCon_D3", "OCR_D3", "OCon_D7", "OCR_D7", "OCon_D12", "OCR_D12", "OCon_D17", "OCR_D17"))
 
