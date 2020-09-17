@@ -2,7 +2,7 @@
 #and Natan Basisty, PhD
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
-#September 15, 2020
+#September 17, 2020
 
 # PROTEIN TURNOVER ANALYSIS
 # STEP 0 
