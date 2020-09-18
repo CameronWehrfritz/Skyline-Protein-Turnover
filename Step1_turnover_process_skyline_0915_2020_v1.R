@@ -39,8 +39,12 @@ package.check <- lapply(packages, FUN = function(x) {
 
 #------------------------------------------------------------------------------------
 # LOAD DATA #
-#df <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0723_OCR1_turnover/Input/2020_0723_OCR_turnover_v1.csv", stringsAsFactors = F) #VPN mac
-df <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0723_OCR1_turnover/Input/2020_0723_OCR_turnover_v1.csv", stringsAsFactors = F) #VPN windows
+
+# test data: 2020_0529_rablab_cr_ctl_4prots.csv
+# change directory as necessary
+
+#df <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN mac
+df <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN windows
 #------------------------------------------------------------------------------------
 
 
