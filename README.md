@@ -13,8 +13,8 @@ Output Files:
 
 Step2
 Description: Optional step to calculate the x-intercepts of the turnover regressions, using the percentage newly synthesized values of each protein, calculated step 1.
-Input File:
-Input Parameters:
+Input File: 
+Input Parameters: 
 Output Files: 
 
 Step3
@@ -26,8 +26,6 @@ Output Files: 1) CSV report containing slope values, half-lives, x-intercepts, e
 Step4
 Description: Performs pairwise statistical comparisons of all the regressions between treatment groups and generates statistical reports.
 Input Files: CSV file outputted from step 3.
-1) multiple leucine peptides data file (e.g. Step0_Data_Output_Skyline_multileucine_peps_test.csv)
-2) single leucine peptide data file (e.g.Step0_Data_Output_Skyline_singleleucine_peps_test.csv)
 Input Parameters: confidence interval filters (not implemented yet)
 Output Files: 1) CSV report containing the half-lives, log fold changes between treatment groups, p-values, q-values and other statistical summary information
 
