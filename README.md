@@ -3,8 +3,8 @@ Protein Turnover tool in Skyline
 
 The Skyline Protein Turnover tool uses multiple R scripts to calculate the rates of protein turnover from mass spectrometry proteomics experiments.
 
-~~~Step1~~~
-
+~~~
+~~~Step 1~~~
 Description: This script is the main workhorse as it corrects for the naturally occurring heavy isotopes of Hydrogen, Carbon, Oxygen, Nitrogen and Sulfur. This is the most compute-intensive step in this tool.
 
 Input File: Skyline report csv file (e.g. 2020_0723_OCR_turnover_v1.csv) 
