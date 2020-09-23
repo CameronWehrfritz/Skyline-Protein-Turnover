@@ -26,7 +26,7 @@ setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnove
 #------------------------------------------------------------------------------------
 # PACKAGES #
 packages = c("tidyr", "dplyr", "tibble", "ggplot2", "stringr",  "purrr", 
-             "reshape2",  "gridExtra", "forcats", "pracma", "seqinr")
+             "reshape2",  "gridExtra", "forcats", "pracma", "seqinr", "hablar")
 
 package.check <- lapply(packages, FUN = function(x) {
   if (!require(x, character.only = TRUE)) {
@@ -206,7 +206,11 @@ modify.mol.formula.fun <- function(molecular.formula, num.heavy.leucines){
     # initialize data frame to store modified molecular formulas
     df.mod.mol.formula <- dplyr::as_tibble(matrix(NA, ncol = 2, nrow = num.heavy.leucines+1, # initializing a tibble with 2 named columns 
                                                   dimnames=list(NULL, c("Molecular.Formula", "Number.Heavy.Leucines")))) # names of columns
-    df.mod.mol.formula[1,] <- c(molecular.formula, 0) # write to first row of tibble, which is 0 heavy leucines and thus not modified
+    
+    df.mod.mol.formula <- df.mod.mol.formula %>% 
+      convert(chr(Molecular.Formula), int(Number.Heavy.Leucines)) # convert column types: Molecular.Formula to character, Number.Heavy.Leucines to integer
+      
+    df.mod.mol.formula[1,] <- list(molecular.formula, 0) # write to first row of tibble, which is 0 heavy leucines and thus not molecular.formula is not modified
     
     mol.formula.pieces <- unlist(strsplit(molecular.formula, "")) # molecular formula pieces
     hydrogen.index <- which(mol.formula.pieces=="H") # get index of hydrogen in the molecular formula
@@ -230,9 +234,9 @@ modify.mol.formula.fun <- function(molecular.formula, num.heavy.leucines){
       if(num.hydrogen>0){ # positive number of hydrogens, which should be the case
         mod.molecular.formula.temp <- paste(first.part.mol.formula, num.hydrogen, last.part.mol.formula, sep="", collapse="") # replace hydrogen factor with the newly modified number of hydrogen
         mod.molecular.formula <- paste(mod.molecular.formula.temp, "D", num.deuterium, sep="", collapse="") # add deteurium to end of molecular formula
-        df.mod.mol.formula[1+i,] <- c(as.character(mod.molecular.formula), as.numeric(i)) # store results
+        df.mod.mol.formula[1+i,] <- list(as.character(mod.molecular.formula), as.numeric(i)) # store results
       } else{ # zero or negative number of hydrogens, which should hopefully never be the case
-        df.mod.mol.formula[1+i,] <- c(NA, i) # store NA for molecular formula and "i" for the number of heavy leucines
+        df.mod.mol.formula[1+i,] <- list(NA, i) # store NA for molecular formula and "i" for the number of heavy leucines
       }
     } #end for
     return(df.mod.mol.formula)
