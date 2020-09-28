@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: September 18, 2020
+#updated: September 28, 2020
 
 # PROTEIN TURNOVER ANALYSIS
 # STEP 3:
@@ -65,8 +65,13 @@ df <- df %>%
 
 #------------------------------------------------------------------------------------
 # FILTER #
-# filter df by Turnover Score
-#df <- subset(df, avg.turn.score < 0.2)
+# filter data by Average Turnover Score
+# between (0,1] where 0 is most stringent. The default should be 1.
+
+ATS.threshold <- 1 # value for filtering data by average turnover score
+
+df <- df %>%
+  filter(Avg.Turnover.Score<ATS.threshold) 
 #------------------------------------------------------------------------------------
 
 

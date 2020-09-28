@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: September 18, 2020
+#updated: September 28, 2020
 
 # PROTEIN TURNOVER ANALYSIS
 # STEP 4
@@ -50,8 +50,13 @@ df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skylin
 
 #------------------------------------------------------------------------------------
 # FILTER #
-# filter data by Average.Turnover.Score
-#data <- subset(data, Avg.Turnover.Score < 0.2) # not using filter for now
+# filter data by Average Turnover Score
+# between (0,1] where 0 is most stringent. The default should be 1.
+
+ATS.threshold <- 1 # value for filtering data by average turnover score 
+
+df <- df %>%
+  filter(Avg.Turnover.Score<ATS.threshold) 
 #------------------------------------------------------------------------------------
 
 
