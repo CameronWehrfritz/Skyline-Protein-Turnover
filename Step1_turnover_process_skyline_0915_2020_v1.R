@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: September 17, 2020
+#updated: September 28, 2020
 
 
 # PROTEIN TURNOVER ANALYSIS
@@ -70,6 +70,7 @@ min.abundance <- 10**(-5) # minimum abundance
 resolution <- 0.1 # resolution for distinguishing peaks
 p.tolerance <- 0.05 # tolerance for combining masses in observed data
 diet.enrichment <- 0.99 # Leucine percent enrichment in diet 
+diet.enrichment <- diet.enrichment/100 # transform percent diet enrichment from 0-100 (%) to 0-1
 #------------------------------------------------------------------------------------
 
 
@@ -927,12 +928,9 @@ if(max.num.heavy.leucine>4){
 
 #------------------------------------------------------------------------------------
 # Isotope Dot Product Filter
-# set this value to any number from 0 to 100 (not including 100).
-# 0 being no filter, thereby retaining all of the data. 
-# 70 or 80 is typically a good value which typically retains a good amount of data.
-# 90 may be too high, as it may filter out too mich of the data.
-## We would like this to be a user defined value in the future tool: between 0 and 100 (including 0, not including 100)
-IDP.threshold <- 0.0 # may set this value to anything between 0 and 100
+# IDP.threshold can be between [0,1) where 1 is most stringent. 
+# The default should be 0, corresponding to no filter, thereby retaining all of the data.
+IDP.threshold <- 0.0 # value for filtering by Isotope Dot Product
 df.solutions.filtered <- df.solutions %>%
   filter(Isotope.Dot.Product>IDP.threshold)
 #------------------------------------------------------------------------------------
@@ -1391,11 +1389,12 @@ boxplot.percentnewsynth <- df.precursor.pool %>%
 # first see the histogram of Average Turnover Score
 hist(df.precursor.pool$Avg.Turnover.Score, breaks=1000, xlim=c(0,1), main="Average Turnover Score", xlab="Average Turnover Score")
 
-# average turnover score filter: 1, 0.8, 0.6, 0.4, 0.2
-ATS <- 1
+# average turnover score filter
+# between (0,1] where 0 is most stringent. The default should be 1.
+ATS.threshold <- 1 # value for filtering data by average turnover score
 
 df.pp.ats.filtered <- df.precursor.pool %>%
-  filter(Avg.Turnover.Score<ATS) 
+  filter(Avg.Turnover.Score<ATS.threshold) 
 
 density.percnew <- df.pp.ats.filtered %>%
   mutate(Condition = fct_relevel(Condition, "OCon_D3", "OCR_D3", "OCon_D7", "OCR_D7", "OCon_D12", "OCR_D12", "OCon_D17", "OCR_D17")) %>%
