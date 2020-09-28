@@ -69,7 +69,7 @@ df <- df %>%
 min.abundance <- 10**(-5) # minimum abundance
 resolution <- 0.1 # resolution for distinguishing peaks
 p.tolerance <- 0.05 # tolerance for combining masses in observed data
-diet.enrichment <- 0.99 # Leucine percent enrichment in diet 
+diet.enrichment <- 99 # Leucine percent enrichment in diet 
 diet.enrichment <- diet.enrichment/100 # transform percent diet enrichment from 0-100 (%) to 0-1
 #------------------------------------------------------------------------------------
 
