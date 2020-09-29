@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: September 28, 2020
+#updated: September 29, 2020
 
 
 # PROTEIN TURNOVER ANALYSIS
@@ -57,7 +57,7 @@ df <- df %>%
 
 # convert Timepoint column to integer
 df <- df %>%
-  mutate_at(vars(Timepoint), funs(type.convert(.))) 
+  mutate_at(vars(Timepoint), list(~type.convert(.))) 
 #------------------------------------------------------------------------------------
 
 
@@ -314,7 +314,8 @@ df.mol.formula.distribution.fun <- function(df.lc.mod.mol.formula){
     # Calculate distribution for the molecular formula and write out results to df.lc.mol.formula
     for(i in seq_along(df.mol.formula$Element)){
       element <- df.mol.formula$Element[[i]] # declare element
-      self <- ntbl.elements[[ which(element==ntbl.elements[["Symbol"]]), "data"]] # declare naturally occuring isotopic element distribution, which we call 'self'
+      self <- ntbl.elements[[ which(element==ntbl.elements[["Symbol"]]), "data"]] %>% # declare naturally occuring isotopic element distribution, which we call 'self'  
+        as.data.frame() # self needs to be data frame for proper references in add.fun      
       factor <- df.mol.formula$Factor[[i]] # declare factor
       distribution <- multiply.fun(self, factor) # calculate mass distribution for this element-factor combination
       
@@ -609,8 +610,8 @@ for(k in seq_along(proteins)){
       
       # add 1 to the end of Molecule.Formula column if the last element is not a number
       df.mod.peptide <- df.mod.peptide %>% 
-        mutate_at( vars(Molecule.Formula), funs(ifelse(unlist(str_split(unique(df.mod.peptide$Molecule.Formula), ""))[nchar(unique(df.mod.peptide$Molecule.Formula))] %in% c("H","C","N","O","S"), 
-                                                                  paste(c(unlist(str_split(unique(df.mod.peptide$Molecule.Formula), "")), "1"), collapse=""), unique(df.mod.peptide$Molecule.Formula))))
+        mutate_at( vars(Molecule.Formula), list(~ifelse(unlist(str_split(unique(df.mod.peptide$Molecule.Formula), ""))[nchar(unique(df.mod.peptide$Molecule.Formula))] %in% c("H","C","N","O","S"),         
+                                                        paste(c(unlist(str_split(unique(df.mod.peptide$Molecule.Formula), "")), "1"), collapse=""), unique(df.mod.peptide$Molecule.Formula))))
       
       # Find Best Combination if the data have both: heavy leucine peptides and zero heavy leucine peptides -- otherwise cannot find best combination
       # df.mod.peptide must have the full sequence of number.heavy.leucines from 0 to the maximum value -- this will be checked for again at the df.charge level, but if it fails here then we can exit out of find.best.combination
@@ -630,7 +631,7 @@ for(k in seq_along(proteins)){
         # 5
         df.lc.simplified.out <- help.weighted.avg.fun(df.lc.final) ## Theoretical data for Matrix A
         # Unnest df.lc.simplified.out
-        df.A <- unnest(df.lc.simplified.out)
+        df.A <- unnest(df.lc.simplified.out, cols = c(df.distribution.reduced)) 
         
         # loop through each REPLICATE.NAME
         for(m in seq_along(reps)){
