@@ -37,11 +37,11 @@ package.check <- lapply(packages, FUN = function(x) {
 #------------------------------------------------------------------------------------
 # LOAD DATA #
 
-# multiple leucine data set (2,3,4 leucines)
-data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) #VPN
-
 # single leucine data set (1 leucine)
 data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) #VPN
+
+# multiple leucine data set (2,3,4 leucines)
+data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) #VPN
 
 # medians of x-intercepts by cohort from step 3
 df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Table_step3_xintercepts.csv", stringsAsFactors = F) #VPN
@@ -50,24 +50,30 @@ df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skylin
 
 #------------------------------------------------------------------------------------
 # FILTER #
-# filter data by Average Turnover Score
-# between (0,1] where 0 is most stringent. The default should be 1.
 
-ATS.threshold <- 1 # value for filtering data by average turnover score 
+# filter multiple leucine data set by average turnover score
+# between [0,1) where 1 is most stringent
+# the default should be 0
+ATS.threshold <- 0 # average turnover score value, used for filtering data
 
-df <- df %>%
-  filter(Avg.Turnover.Score<ATS.threshold) 
+data.m <- data.m %>%
+  filter(Avg.Turnover.Score>ATS.threshold) 
 #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
 # Combine Single Leucine and Multiple Leucine data sets together for modeling
 
-df <- data.s %>%
-  select(-Area0, -Area1) %>% # Drop Area0 and Area1
-  bind_rows(select(data.m, names(data.s), -Area0, -Area1)) %>% # bind multi-leucine data with single-leucine data, keeping only columns which are in single-leucine data
+df <- data.m %>%
+  bind_rows(data.s) # retains all columns; fills missing columns in with NA 
+#------------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------------
+# Remove observations with negative percent.new.synthesized values
+
+df <- df %>%
   filter(Perc.New.Synth>0)
-  #filter(Perc.New.Synth<=1) # keep only data with Percent.Newly.Sythnesized less than or equal to 100%
 #------------------------------------------------------------------------------------
 
 
@@ -86,16 +92,6 @@ genes <- unique(df$Protein.Gene)
 # time points
 time <- sort(unique(df$Timepoint))
 
-
-# # create modified time by subtracting the median x-intercept time (shifting left toward the origin)
-# # unless x-intercepts are negative, then modified.time is same as time
-# for(i in 1:length(cohorts)){
-#   if(df.x.int.medians[1, colnames(df.x.int.medians)== cohorts[i]] > 0 ){
-#     df$Modified.Timepoint[ df$Cohort == cohorts[i] ] <- df[df$Cohort == cohorts[i], "Timepoint"] - df.x.int.medians[1, colnames(df.x.int.medians)== cohorts[i]] # translate Timepoints left by the median x-intercept
-#   } else { 
-#     df$Modified.Timepoint[ df$Cohort == cohorts[i] ] <- df[df$Cohort == cohorts[i], "Timepoint"] # if median x.intercept is negative then do not modify
-#   }
-# } # end for
 
 # create modified time by subtracting the median x-intercept time (shifting left toward the origin)
 # unless x-intercepts are negative, then modified.time is same as time

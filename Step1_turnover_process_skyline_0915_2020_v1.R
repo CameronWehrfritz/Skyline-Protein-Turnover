@@ -43,7 +43,7 @@ package.check <- lapply(packages, FUN = function(x) {
 # test data: 2020_0529_rablab_cr_ctl_4prots.csv
 # change directory as necessary
 
-#df <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN mac
+# df <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN mac
 df <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN windows
 #------------------------------------------------------------------------------------
 
@@ -569,13 +569,11 @@ proteins <- unique(df$Protein.Gene) # all proteins, once the script works the fi
 df.test <- df %>%
   filter(df$Protein.Gene %in% proteins)
 
-# long format with Number.Heavy.Leucine and individual Isotope.Dot.Product (IDP) values
 # Initialize Solutions Data Frame for storing the Find Best Combination solutions  
+# long format with Number.Heavy.Leucine and individual Isotope.Dot.Product (IDP) values
 df.solutions <- data.frame(matrix(NA,
                                   nrow=length(unique(df.test$Replicate.Name))*length(unique(df.test$Peptide))*length(unique(df.test$Product.Charge)*max(df.test$Number.Heavy.Leucines)),
-                                  ncol=11
-                                  )
-                           )
+                                  ncol=11))
                            
 # name columns
 names(df.solutions)[1:11] <- c("Protein.Gene", "Protein.Accession", "Peptide", "Modified.Peptide", "Replicate.Name", "Condition",
@@ -643,9 +641,6 @@ for(k in seq_along(proteins)){
           
           # loop through each PRODUCT.CHARGE
           for(l in seq_along(charges)){
-            # increase counter during each iteration in the innnermost loop
-            #counter <- counter + 1
-            
             # subset for product.charge 
             df.charge <- df.rep %>%
               filter(df.rep$Product.Charge==charges[l])
@@ -773,8 +768,6 @@ for(k in seq_along(proteins)){
               df.solutions[rows.write.out, "Condition"] <- unique(df.charge$Condition)
               # Timepoint
               df.solutions[rows.write.out, "Timepoint"] <- as.numeric(unique(df.charge$Timepoint))
-              # # cohort
-              # df.solutions[rows.write.out, "Cohort"] <- unique(df.charge$Cohort)
               # Product.Charge
               df.solutions[rows.write.out, "Product.Charge"] <- as.numeric(unique(df.charge$Product.Charge))
               # Number Heavy Leucines
@@ -816,8 +809,6 @@ for(k in seq_along(proteins)){
               df.solutions[rows.write.out, "Condition"] <- unique(df.charge$Condition)
               # Timepoint
               df.solutions[rows.write.out, "Timepoint"] <- as.numeric(unique(df.charge$Timepoint))
-              # # cohort
-              # df.solutions[rows.write.out, "Cohort"] <- unique(df.charge$Cohort)
               # Product.Charge
               df.solutions[rows.write.out, "Product.Charge"] <- as.numeric(unique(df.charge$Product.Charge))
               # Number Heavy Leucines
@@ -864,8 +855,6 @@ for(k in seq_along(proteins)){
         df.solutions[rows.write.out, "Condition"] <- unique(df.mod.peptide$Condition)[1] # take just the first element in case there are multiple values
         # Timepoint
         df.solutions[rows.write.out, "Timepoint"] <- as.numeric(unique(df.mod.peptide$Timepoint))[1] # take just the first element in case there are multiple values
-        # # cohort
-        # df.solutions[rows.write.out, "Cohort"] <- unique(df.mod.peptide$Cohort)
         # Product.Charge
         df.solutions[rows.write.out, "Product.Charge"] <- as.numeric(unique(df.mod.peptide$Product.Charge))
         # Number Heavy Leucines
@@ -1110,7 +1099,7 @@ df.pp.grouped <- df.precursor.pool %>%
 # first convert to data frame
 df.pp.grouped <- as.data.frame(df.pp.grouped)
 
-## this part needs to be updated to be more general for any conditions that are present in the data
+## this part needs to be updated to be more general for any conditions that are present in the data ## TO DO 
 df.pp.medians <- data.frame(Condition = c("OCon_D3", "OCon_D7", "OCon_D12", "OCon_D17", "OCR_D3", "OCR_D7", "OCR_D12", "OCR_D17"), 
                             Precursor.Pool = 
                               c(median(as.numeric(df.pp.grouped[ grepl("OCon_D3", df.pp.grouped$Total.Replicate.Name), "Median.PP"])),
@@ -1204,7 +1193,7 @@ for(i in 1:length(df.precursor.pool$Condition)){
 # add new columns onto df.precursor.pool
 df.precursor.pool <- df.precursor.pool %>%
   cbind("Perc.New.Synth"=perc.new.synth) %>%
-  cbind("Avg.Turnover.Score"=avg.turn.score)
+  cbind("Avg.Turnover.Score"=1-avg.turn.score) # taking the complement of avg.turn.score; now 1 is the best score, 0 is the worst
 
 # write out
 write.csv(df.precursor.pool, "Step0_Data_Output_Skyline_multileucine_peps_test.csv", row.names = FALSE)
@@ -1249,9 +1238,10 @@ write.csv(df.areas.one.l , "Step0_Data_Output_Skyline_singleleucine_peps_test.cs
 # PLOTS
 
 # first, relevel df.pp.medians factors - for plotting median precursor pool lines
-## we will want to do this more generally directly from the skyline input at the beginning of this script
+## we will want to do this more generally directly from the skyline input at the beginning of this script ## TO DO
 df.pp.medians <- df.pp.medians %>%
   mutate(Condition = fct_relevel(Condition, "OCon_D3", "OCR_D3", "OCon_D7", "OCR_D7", "OCon_D12", "OCR_D12", "OCon_D17", "OCR_D17"))
+
 
 # plots:
 
@@ -1387,15 +1377,17 @@ boxplot.percentnewsynth <- df.precursor.pool %>%
 
 #------------------------------------------------------------------------------------
 # Average Turnover Score Filter
+
 # first see the histogram of Average Turnover Score
-hist(df.precursor.pool$Avg.Turnover.Score, breaks=1000, xlim=c(0,1), main="Average Turnover Score", xlab="Average Turnover Score")
+hist(df.precursor.pool$Avg.Turnover.Score, breaks=100, main="Average Turnover Score", xlab="Average Turnover Score")
 
 # average turnover score filter
-# between (0,1] where 0 is most stringent. The default should be 1.
-ATS.threshold <- 1 # value for filtering data by average turnover score
+# between [0,1) where 1 is most stringent
+# the default should be 0
+ATS.threshold <- 0 # average turnover score value, used for filtering data
 
 df.pp.ats.filtered <- df.precursor.pool %>%
-  filter(Avg.Turnover.Score<ATS.threshold) 
+  filter(Avg.Turnover.Score>ATS.threshold) 
 
 density.percnew <- df.pp.ats.filtered %>%
   mutate(Condition = fct_relevel(Condition, "OCon_D3", "OCR_D3", "OCon_D7", "OCR_D7", "OCon_D12", "OCR_D12", "OCon_D17", "OCR_D17")) %>%
