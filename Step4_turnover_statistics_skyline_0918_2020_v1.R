@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: September 18, 2020
+#updated: September 30, 2020
 
 # PROTEIN TURNOVER ANALYSIS
 # STEP 5
@@ -39,11 +39,11 @@ package.check <- lapply(packages, FUN = function(x) {
 #------------------------------------------------------------------------------------
 # LOAD DATA #
 
-# multiple leucine data set (2,3,4 leucines)
-data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) #VPN
-
 # single leucine data set (1 leucine)
 data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) #VPN
+
+# multiple leucine data set (2,3,4 leucines)
+data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) #VPN
 
 # medians of x-intercepts by cohort from step 3
 df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Table_step3_xintercepts.csv", stringsAsFactors = F) #VPN
@@ -53,11 +53,10 @@ df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skylin
 #------------------------------------------------------------------------------------
 # Combine Single Leucine and Multiple Leucine data sets together for modeling
 
-df <- data.s %>%
-  select(-Area0, -Area1) %>% # Drop Area0 and Area1
-  bind_rows(select(data.m, names(data.s), -Area0, -Area1)) %>% # bind multi-leucine data with single-leucine data, keeping only columns which are in single-leucine data
-  filter(Perc.New.Synth>0) %>%
-  mutate_at(vars(Perc.New.Synth), funs(.*100)) # scale Percent New Synthesized by 100 to turn into percent - we will be taking the log of this later
+df <- data.m %>%
+  bind_rows(data.s) %>% # retains all columns; fills missing columns in with NA
+  filter(Perc.New.Synth>0) %>% # retain data with positive values of percent newly synthesized
+  mutate_at(vars(Perc.New.Synth), list(~.*100)) # scale percent newly synthesized by 100 - we will be taking the log of this later
 #------------------------------------------------------------------------------------
 
 
