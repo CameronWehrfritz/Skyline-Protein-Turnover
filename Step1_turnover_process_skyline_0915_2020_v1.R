@@ -21,8 +21,8 @@
 
 #------------------------------------------------------------------------------------
 #set working directory
-setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN mac
-# setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN windows
+# setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN mac
+setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN windows
 #------------------------------------------------------------------------------------
 
 
@@ -46,8 +46,8 @@ package.check <- lapply(packages, FUN = function(x) {
 # test data: 2020_0529_rablab_cr_ctl_4prots.csv
 # change directory as necessary
 
-df <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN mac
-# df <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN windows
+# df <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN mac
+df <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN windows
 #------------------------------------------------------------------------------------
 
 
@@ -777,9 +777,9 @@ for(k in seq_along(proteins)){
               # Number Heavy Leucines
               df.solutions[rows.write.out, "Number.Heavy.Leucines"] <- as.numeric(unique(df.charge$Number.Heavy.Leucines))
               # Detection Qvalue
-              df.solutions[rows.write.out, "Detection.Q.Value"] <- as.numeric(df.charge$Detection.Q.Value)
+              df.solutions[rows.write.out, "Detection.Q.Value"] <- as.numeric(unique(df.charge$Detection.Q.Value)) ### is this right? example data set has #N/A entries...check with good values
               # Total Area MS1
-              df.solutions[rows.write.out, "Total.Area.MS1"] <- as.numeric(df.charge$Total.Area.MS1)
+              df.solutions[rows.write.out, "Total.Area.MS1"] <- as.numeric(unique(df.charge$Total.Area.MS1))
               # Isotope.Dot.Product - individual IDP values; one unique per peptide by Number of Heavy Leucines
               # first create a vector of unique values based on Number Heavy Leucine ... then write them out
               IDP <- c() # initialize IDP vector
@@ -822,9 +822,9 @@ for(k in seq_along(proteins)){
               # Number Heavy Leucines
               df.solutions[rows.write.out, "Number.Heavy.Leucines"] <- as.numeric(unique(df.charge$Number.Heavy.Leucines))
               # Detection Qvalue
-              df.solutions[rows.write.out, "Detection.Q.Value"] <- as.numeric(df.charge$Detection.Q.Value)
+              df.solutions[rows.write.out, "Detection.Q.Value"] <- as.numeric(unique(df.charge$Detection.Q.Value)) ### is this right? example data set has #N/A entries...check with good values
               # Total Area MS1
-              df.solutions[rows.write.out, "Total.Area.MS1"] <- as.numeric(df.charge$Total.Area.MS1)
+              df.solutions[rows.write.out, "Total.Area.MS1"] <- as.numeric(unique(df.charge$Total.Area.MS1))
               # Isotope.Dot.Product - individual IDP values; one unique per peptide by Number of Heavy Leucines
               # first create a vector of unique values based on Number Heavy Leucine ... then write them out
               IDP <- c() # initialize IDP vector
@@ -872,9 +872,9 @@ for(k in seq_along(proteins)){
         # Number Heavy Leucines
         df.solutions[rows.write.out, "Number.Heavy.Leucines"] <- as.numeric(unique(df.mod.peptide$Number.Heavy.Leucines))
         # Detection Qvalue
-        df.solutions[rows.write.out, "Detection.Q.Value"] <- as.numeric(unique(df.mod.peptide$Detection.Q.Value))[1]
+        df.solutions[rows.write.out, "Detection.Q.Value"] <- as.numeric(unique(df.mod.peptide$Detection.Q.Value))[1] # take just the first element in case there are multiple values
         # Total Area MS1
-        df.solutions[rows.write.out, "Total.Area.MS1"] <- as.numeric(unique(df.mod.peptide$Total.Area.MS1))[1]
+        df.solutions[rows.write.out, "Total.Area.MS1"] <- as.numeric(unique(df.mod.peptide$Total.Area.MS1))[1] # take just the first element in case there are multiple values
         # Isotope.Dot.Product - individual IDP values; one unique per peptide by Number of Heavy Leucines
         # first create a vector of unique IDP values based on Number Heavy Leucine ... then write them out
         IDP <- c() # initialize IDP vector
@@ -898,7 +898,7 @@ for(k in seq_along(proteins)){
 # trim any extra rows in the data frame past the counter, since there may be extranneous rows at the time of the initialization of df.solutions
 # this will leave a row of NA's at the end of df.solutions, since we've increased the counter at the end of each iteration of the loop.
 # we can trim this last row off also by doing na.omit() or we can instead increase the counter at the beginning of each iteration of the loop.
-df.solutions <- df.solutions[1:counter,] 
+df.solutions <- df.solutions[1:(counter-1),] 
 
 # write out
 write.csv(df.solutions, file="df_solutions_date_test.csv", row.names = FALSE)
@@ -906,9 +906,11 @@ write.csv(df.solutions, file="df_solutions_date_test.csv", row.names = FALSE)
 
 
 #------------------------------------------------------------------------------------
-# remove rows with NA, which drops all rows which have 'NA' for FBC solution
+# Clean Up df.solutions
+
+# remove rows which have 'NA' for FBC solution
 df.solutions <- df.solutions %>%
-  na.omit()
+  filter(!is.na(FBC.Solution))
 
 # clean up df.solutions - for successive R scripts
 df.solutions <- df.solutions %>%
@@ -918,8 +920,7 @@ df.solutions <- df.solutions %>%
   dplyr::mutate(Condition=paste0(Cohort, "_D", Timepoint)) %>% # create new Condition column, by merging cohort with timepoint and including "D" for day
   dplyr::mutate(Total.Replicate.Name=paste0(Condition, "_", Replicate.Name)) %>% # create new Total.Replicate.Name column
   dplyr::mutate(Area.Number.Heavy.Leucines=paste0("Area", Number.Heavy.Leucines)) %>% # create new column for casting to wide format later
-  dplyr::mutate(FBC.Solution=ifelse(FBC.Solution<0, 0, # FBC - negative values are changed to zero
-                                  ifelse(FBC.Solution>1, 1, FBC.Solution))) # FBC - values greater than one are changed to one
+  dplyr::mutate(FBC.Solution=ifelse(FBC.Solution<0, 0, ifelse(FBC.Solution>1, 1, FBC.Solution))) # FBC solution must be [0,1]: negative values are changed to 0, greater than 1 are changed to 1
 
 # store max number of heavy leucines in df.solutions
 max.num.heavy.leucine <- max(df.solutions$Number.Heavy.Leucines)
