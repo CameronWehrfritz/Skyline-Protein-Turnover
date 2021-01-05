@@ -941,9 +941,31 @@ if(max.num.heavy.leucine>4){
 # The default should be 0, corresponding to no filter, thereby retaining all of the data.
 IDP.threshold <- 0.0 # value for filtering by Isotope Dot Product
 df.solutions.filtered <- df.solutions %>%
-  filter(Isotope.Dot.Product>IDP.threshold)
+  filter(Isotope.Dot.Product > IDP.threshold)
 #------------------------------------------------------------------------------------
 
+
+#------------------------------------------------------------------------------------
+# Detection Qvalue Filter
+# IDP.threshold can be between [0,1) where smaller values are more stringent. 
+# The default should be 1, corresponding to no filter, thereby retaining all of the data.
+Detection.Qvalue.threshold <- 1 # value for filtering by Detection Qvalue
+df.solutions.filtered <- df.solutions %>%
+  filter(Detection.Q.Value < Detection.Qvalue.threshold)
+#------------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------------
+# Rearrange variables in df.solutions.filtered
+# and write out this filtered version
+df.solutions.filtered <- df.solutions.filtered %>%
+  select(Protein.Gene, Protein.Accession, Peptide, Modified.Peptide.Seq, Total.Replicate.Name, Condition, Cohort, Replicate.Name, Timepoint,
+         Product.Charge, Number.Heavy.Leucines, Area.Number.Heavy.Leucines, 
+         everything())
+
+# write out
+write.csv(df.solutions.filtered, file="df_solutions_filtered_date_test.csv", row.names = FALSE)
+#------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
@@ -1106,32 +1128,22 @@ write.csv(df.precursor.pool, "Precursor_Pool_test.csv", row.names = FALSE)
 
 
 #------------------------------------------------------------------------------------
-# Group and Calculate Precursor Pool % for each Replicate.name
-# individual precursor pool has already been calculated and stored in data frame df.precursor.pool
+# Calculate Precursor Pool % for each Condition.
+# individual precursor pool has already been calculated and stored in the data frame df.precursor.pool
 # here we will group by Replicate.Name and calculate the median precursor pool for each group
-# then we will write a new column on df.precursor.pool to store this average precursor pool
-df.pp.grouped <- df.precursor.pool %>%
-  dplyr::group_by(Total.Replicate.Name) %>%
-  dplyr::summarise(Median.PP=median(Precursor.Pool, na.rm = TRUE)) # may throw a warning message
+# then we will group by Condition and calculate the final median precursor pool for each condition
 
-# Aggreate again by Condition (which is Cohort+Timepoint)
-# first convert to data frame
-df.pp.grouped <- as.data.frame(df.pp.grouped)
+df.pp.medians <- df.precursor.pool %>%
+  dplyr::group_by(Total.Replicate.Name) %>% # first group by Total Replicate Name and calculate median precursor pool
+  mutate(Total.Replicate.Median.PP=median(Precursor.Pool, na.rm = TRUE)) %>%
+  dplyr::group_by(Condition) %>% # group by Condition and calculate median precursor pool
+  mutate(Precursor.Pool=median(Total.Replicate.Median.PP)) %>% # calculate median precursor pool
+  ungroup() %>%
+  arrange(Timepoint) %>% # arrange in ascending order by timepoint
+  select(Condition, Precursor.Pool) %>% 
+  unique() # keep only the unique conditions and their median precursor pool values
 
-## this part needs to be updated to be more general for any conditions that are present in the data ## TO DO 
-df.pp.medians <- data.frame(Condition = c("OCon_D3", "OCon_D7", "OCon_D12", "OCon_D17", "OCR_D3", "OCR_D7", "OCR_D12", "OCR_D17"), 
-                            Precursor.Pool = 
-                              c(median(as.numeric(df.pp.grouped[ grepl("OCon_D3", df.pp.grouped$Total.Replicate.Name), "Median.PP"])),
-                                median(as.numeric(df.pp.grouped[ grepl("OCon_D7", df.pp.grouped$Total.Replicate.Name), "Median.PP"])),
-                                median(as.numeric(df.pp.grouped[ grepl("OCon_D12", df.pp.grouped$Total.Replicate.Name), "Median.PP"])),
-                                median(as.numeric(df.pp.grouped[ grepl("OCon_D17", df.pp.grouped$Total.Replicate.Name), "Median.PP"])),
-                                median(as.numeric(df.pp.grouped[ grepl("OCR_D3", df.pp.grouped$Total.Replicate.Name), "Median.PP"])),
-                                median(as.numeric(df.pp.grouped[ grepl("OCR_D7", df.pp.grouped$Total.Replicate.Name), "Median.PP"])),
-                                median(as.numeric(df.pp.grouped[ grepl("OCR_D12", df.pp.grouped$Total.Replicate.Name), "Median.PP"])),
-                                median(as.numeric(df.pp.grouped[ grepl("OCR_D17", df.pp.grouped$Total.Replicate.Name), "Median.PP"])))
-)
-
-# write out Precursor Pool Data frame (aka RIA)
+# write out Precursor Pool Data frame
 write.csv(df.pp.medians, "Precursor_Pool_PPmedians_test.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
@@ -1247,6 +1259,11 @@ for(i in 1:length(df.areas.one.l$Condition)){
 df.areas.one.l <- df.areas.one.l %>%
   cbind("Perc.New.Synth"=perc.new.synth.one.l)
 
+
+####
+df.areas.one.l <- df.areas.one.l %>%
+  arrange(Timepoint)
+
 # write out
 write.csv(df.areas.one.l , "Step1_Data_Output_Skyline_singleleucine_peps_test.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
@@ -1258,6 +1275,8 @@ write.csv(df.areas.one.l , "Step1_Data_Output_Skyline_singleleucine_peps_test.cs
 
 # first relevel factors for the data frames which we will plot data from
 ## we will want to do this more generally directly from the skyline input at the beginning of this script ## TO DO
+
+
 df.pp.medians <- df.pp.medians %>%
   mutate(Condition = fct_relevel(Condition, "OCon_D3", "OCR_D3", "OCon_D7", "OCR_D7", "OCon_D12", "OCR_D12", "OCon_D17", "OCR_D17"))
 
