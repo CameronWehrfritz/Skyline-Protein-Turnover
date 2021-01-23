@@ -950,7 +950,7 @@ df.solutions.filtered <- df.solutions %>%
 # IDP.threshold can be between [0,1) where smaller values are more stringent. 
 # The default should be 1, corresponding to no filter, thereby retaining all of the data.
 Detection.Qvalue.threshold <- 1 # value for filtering by Detection Qvalue
-df.solutions.filtered <- df.solutions %>%
+df.solutions.filtered <- df.solutions.filtered %>%
   filter(Detection.Q.Value < Detection.Qvalue.threshold)
 #------------------------------------------------------------------------------------
 
@@ -959,12 +959,12 @@ df.solutions.filtered <- df.solutions %>%
 # Rearrange variables in df.solutions.filtered
 # and write out this filtered version
 df.solutions.filtered <- df.solutions.filtered %>%
-  select(Protein.Gene, Protein.Accession, Peptide, Modified.Peptide.Seq, Total.Replicate.Name, Condition, Cohort, Replicate.Name, Timepoint,
-         Product.Charge, Number.Heavy.Leucines, Area.Number.Heavy.Leucines, 
-         everything())
+  select(Protein.Gene, Protein.Accession, Peptide, Modified.Peptide.Seq, Total.Replicate.Name, Condition, Cohort, 
+         Replicate.Name, Timepoint, Product.Charge, Number.Heavy.Leucines, Area.Number.Heavy.Leucines, 
+         everything()) # all other variables
 
 # write out
-write.csv(df.solutions.filtered, file="df_solutions_filtered_date_test.csv", row.names = FALSE)
+write.csv(df.solutions.filtered, file="df_solutions_filtered_date.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
@@ -976,7 +976,7 @@ df.areas.charge <- dcast(data = df.solutions.filtered, formula = Protein.Accessi
   mutate(Percent.Label = rowSums(select(., all_of(heavy.label.areas)), na.rm=TRUE)/rowSums(select(., contains("Area")), na.rm=TRUE)) # create new column `Percent.Label`=Label Area/Total Area
 
 # split off the 1 Leucine data; we won't be able to calculate individual `precursor pool` with this data but we can 
-# back calculate the `% new synthesized` once we have calculated the `median precursor pools` for each Condition with the other data containing 2-4 leucines
+# back calculate the `% new synthesized` once we have calculated the `median precursor pools` for each Condition with the other data containing multiple leucines
 df.areas.one.l <- df.areas.charge %>%
   filter(Number.Leucine==1 & !is.na(Area0) & !is.na(Area1)) %>% # keep all peptides with 1 Leucine where both Area0 and Area1 are not NA
   select(-c(heavy.label.areas[-1])) # drop heavy leucine columns above Area1
@@ -1123,7 +1123,7 @@ df.precursor.pool <- df.precursor.pool %>%
   mutate(Total.Area = rowSums(select(., contains("Area")), na.rm=TRUE))
 
 # write out Precursor Pool Data frame
-write.csv(df.precursor.pool, "Precursor_Pool_test.csv", row.names = FALSE)
+write.csv(df.precursor.pool, "Precursor_Pool_date.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
@@ -1137,14 +1137,14 @@ df.pp.medians <- df.precursor.pool %>%
   dplyr::group_by(Total.Replicate.Name) %>% # first group by Total Replicate Name and calculate median precursor pool
   mutate(Total.Replicate.Median.PP=median(Precursor.Pool, na.rm = TRUE)) %>%
   dplyr::group_by(Condition) %>% # group by Condition and calculate median precursor pool
-  mutate(Precursor.Pool=median(Total.Replicate.Median.PP)) %>% # calculate median precursor pool
-  ungroup() %>%
+  mutate(Precursor.Pool=median(Total.Replicate.Median.PP)) %>% 
+  ungroup() %>% 
   arrange(Timepoint) %>% # arrange in ascending order by timepoint
-  select(Condition, Precursor.Pool) %>% 
+  select(Condition, Precursor.Pool) %>% # keep only these variables
   unique() # keep only the unique conditions and their median precursor pool values
 
 # write out Precursor Pool Data frame
-write.csv(df.pp.medians, "Precursor_Pool_PPmedians_test.csv", row.names = FALSE)
+write.csv(df.pp.medians, "Precursor_Pool_PPmedians_date.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
@@ -1227,7 +1227,7 @@ df.precursor.pool <- df.precursor.pool %>%
   cbind("Avg.Turnover.Score"=1-avg.turn.score) # taking the complement of avg.turn.score; now 1 is the best score, 0 is the worst
 
 # write out
-write.csv(df.precursor.pool, "Step1_Data_Output_Skyline_multileucine_peps_test.csv", row.names = FALSE)
+write.csv(df.precursor.pool, "Step1_Data_Output_Skyline_multileucine_peps_date.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
@@ -1265,7 +1265,7 @@ df.areas.one.l <- df.areas.one.l %>%
   arrange(Timepoint)
 
 # write out
-write.csv(df.areas.one.l , "Step1_Data_Output_Skyline_singleleucine_peps_test.csv", row.names = FALSE)
+write.csv(df.areas.one.l , "Step1_Data_Output_Skyline_singleleucine_peps_date.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
@@ -1273,23 +1273,41 @@ write.csv(df.areas.one.l , "Step1_Data_Output_Skyline_singleleucine_peps_test.cs
 #------------------------------------------------------------------------------------
 # PLOTS
 
-# first relevel factors for the data frames which we will plot data from
-## we will want to do this more generally directly from the skyline input at the beginning of this script ## TO DO
 
+###
+# first relevel factors for Condition variable, for the data frames which we will use to plot data:
+
+# unique cohorts
+cohorts <- unique(df.precursor.pool$Cohort)
+
+# unique timepoints - in ascending order
+timepoints <- df.precursor.pool %>%
+  arrange(Timepoint) %>%
+  pull(Timepoint) %>%
+  unique()
+
+conditions.relevel <- c() # initialize vector
+# loop through timepoints, creating conditions.relevel vector with all cohorts along the way
+for(i in timepoints){
+  conditions.relevel <- append(conditions.relevel, paste0(cohorts, sep="_D", i))
+}
+
+# relevel Condition variable in these three data frames:
 
 df.pp.medians <- df.pp.medians %>%
-  mutate(Condition = fct_relevel(Condition, "OCon_D3", "OCR_D3", "OCon_D7", "OCR_D7", "OCon_D12", "OCR_D12", "OCon_D17", "OCR_D17"))
+  mutate(Condition = fct_relevel(Condition, conditions.relevel))
 
 df.precursor.pool <- df.precursor.pool %>%
-  mutate(Condition = fct_relevel(Condition, "OCon_D3", "OCR_D3", "OCon_D7", "OCR_D7", "OCon_D12", "OCR_D12", "OCon_D17", "OCR_D17"))
+  mutate(Condition = fct_relevel(Condition, conditions.relevel))
 
 df.areas.one.l <- df.areas.one.l %>%
-  mutate(Condition = fct_relevel(Condition, "OCon_D3", "OCR_D3", "OCon_D7", "OCR_D7", "OCon_D12", "OCR_D12", "OCon_D17", "OCR_D17"))
+  mutate(Condition = fct_relevel(Condition, conditions.relevel))
+###
 
 
-# plots:
+# Plots:
 
-### Peptides with 1 Leucine:
+### Peptides with one Leucine:
 # Box Plots of Percent Newly Synthesized by Condition
 # reorder Conditions using {Forcats} function fct_relevel
 boxplot.oneleucine.percentnewsynth <- df.areas.one.l %>%
@@ -1297,26 +1315,31 @@ boxplot.oneleucine.percentnewsynth <- df.areas.one.l %>%
   geom_boxplot(aes(y=Perc.New.Synth, col=Condition, alpha=0.1)) +
   labs(title="Percent Newly Sythnesized Distribution by Condition - Peptides with 1 Leucine", x="Condition", y="Percent Newly Synthesized") +
   theme_bw() 
+
+# save plot
+ggsave("Boxplot_Percent-Newly-Synthesized_single-leucine-peptides.pdf",
+       plot = boxplot.oneleucine.percentnewsynth,
+       width = 7, height = 5,
+       units = "in", # inches
+       dpi = 300)
 ####
 
 
-#### Peptides with 2-4 Leucines:
+#### Peptides with multiple Leucines:
 
 # Density curves - Precursor Pool
 # all Conditions in the same plot
-# reorder Conditions using {Forcats} function fct_relevel
-density.groups <- df.precursor.pool %>%
-  ggplot(aes(x=Precursor.Pool, fill=Condition)) + 
-  geom_histogram(aes(y=..density..), alpha=0.2, col="black", position='identity') +
-  geom_density(alpha=0.2) +
-  geom_vline(data=df.pp.medians, aes(xintercept=Precursor.Pool, col=Condition), linetype="dashed", show.legend=FALSE) +
-  labs(title="Precursor Pool Distrubtion by Condition", x="Precursor Pool", y="Density") +
-  theme_bw() 
+# density.groups <- df.precursor.pool %>%
+#   ggplot(aes(x=Precursor.Pool, fill=Condition)) + 
+#   geom_histogram(aes(y=..density..), alpha=0.2, col="black", position='identity') +
+#   geom_density(alpha=0.2) +
+#   geom_vline(data=df.pp.medians, aes(xintercept=Precursor.Pool, col=Condition), linetype="dashed", show.legend=FALSE) +
+#   labs(title="Precursor Pool Distrubtion by Condition", x="Precursor Pool", y="Density") +
+#   theme_bw() 
 
 # Density curves - Precursor Pool
-# reorder Conditions using {Forcats} function fct_relevel
 # Facet by Condition 
-density.groups2 <- df.precursor.pool %>%
+density.precursor.pool <- df.precursor.pool %>%
   ggplot(aes(x=Precursor.Pool, fill=Condition)) + 
   geom_histogram(aes(y=..density..), alpha=0.2, col="black", position='identity') +
   geom_density(alpha=0.2) +
@@ -1325,11 +1348,17 @@ density.groups2 <- df.precursor.pool %>%
   labs(title="Precursor Pool Distrubtion by Condition", x="Precursor Pool", y="Density") +
   theme_bw() 
 
+# save plot
+ggsave("Density_Precursor-Pool.pdf",
+       plot = density.precursor.pool,
+       width = 7, height = 5,
+       units = "in", # inches
+       dpi = 300)
+
 
 # Density Curves - Percent Newly Synthesized 
-# reorder Conditions using {Forcats} function fct_relevel
 # Facet by Condition 
-density.groups3 <- df.precursor.pool %>%
+density.percent.new.synthesized <- df.precursor.pool %>%
   ggplot(aes(x=Perc.New.Synth, fill=Condition)) + 
   geom_histogram(aes(y=..density..), alpha=0.2, col="black", position='identity') +
   geom_density(alpha=0.2) +
@@ -1338,20 +1367,66 @@ density.groups3 <- df.precursor.pool %>%
   labs(title="Percent Newly Synthesized Distrubtion by Condition", x="Percent Newly Synthesized", y="Density") +
   theme_bw() 
 
+# save plot
+ggsave("Density_Percent-Newly-Synthesized.pdf",
+       plot = density.percent.new.synthesized,
+       width = 7, height = 5,
+       units = "in", # inches
+       dpi = 300)
 
-# Scatterplot - Percent New Synthesized vs. Precursor Pool
-# reorder Conditions using {Forcats} function fct_relevel
-scatterplot.groups <- df.precursor.pool %>%
-  ggplot(aes(x=Precursor.Pool, y=Perc.New.Synth, fill=Condition)) + # optional: use linetype=group to use different linetypes
-  geom_point(aes(x=Precursor.Pool, y=Perc.New.Synth, col=Condition, alpha=0.1)) +
-  geom_vline(data=df.pp.medians, aes(xintercept=Precursor.Pool, col=Condition), linetype="dashed", show.legend=FALSE) +
-  labs(title="Percent New Synthesized vs. Precursor Pool", x="Precursor Pool", y="Percent New Synthesized") +
+# Box Plots  Precursor Pool by Condition
+boxplot.precursor.pool <- df.precursor.pool %>%
+  ggplot(aes(y=Precursor.Pool, fill=Condition)) + # optional: use linetype=group to use different linetypes
+  geom_boxplot(aes(y=Precursor.Pool, col=Condition, alpha=0.1)) +
+  labs(title="Precursor Pool Distribution by Condition", x="Condition", y="Precursor Pool") +
+  theme_bw()
+
+# save plot
+ggsave("Boxplot_Precursor-Pool.pdf",
+       plot = boxplot.precursor.pool,
+       width = 7, height = 5,
+       units = "in", # inches
+       dpi = 300)
+
+# Box Plots - Average Turnover Score by Condition
+boxplot.avg.turnover.score <- df.precursor.pool %>%
+  ggplot(aes(y=Avg.Turnover.Score, fill=Condition)) + # optional: use linetype=group to use different linetypes
+  geom_boxplot(aes(y=Avg.Turnover.Score, col=Condition, alpha=0.1)) +
+  labs(title="Average Turnover Score Distribution by Condition", x="Condition", y="Average Turnover Score") +
   theme_bw() 
 
+# save plot
+ggsave("Boxplot_Average-Turnover-Score.pdf",
+       plot = boxplot.avg.turnover.score,
+       width = 7, height = 5,
+       units = "in", # inches
+       dpi = 300)
+
+# Box Plots - Percent Newly Synthesized by Condition
+boxplot.percent.newly.synthesized <- df.precursor.pool %>%
+  ggplot(aes(y=Perc.New.Synth, fill=Condition)) + # optional: use linetype=group to use different linetypes
+  geom_boxplot(aes(y=Perc.New.Synth, col=Condition, alpha=0.1)) +
+  labs(title="Percent Newly Sythnesized Distribution by Condition", x="Condition", y="Percent Newly Synthesized") +
+  theme_bw() 
+
+# save plot
+ggsave("Density_percent-newly-synthesized.pdf",
+       plot = boxplot.percent.newly.synthesized,
+       width = 7, height = 5,
+       units = "in", # inches
+       dpi = 300)
+
 # Scatterplot - Percent New Synthesized vs. Precursor Pool
-# reorder Conditions using {Forcats} function fct_relevel
+# scatterplot.groups <- df.precursor.pool %>%
+#   ggplot(aes(x=Precursor.Pool, y=Perc.New.Synth, fill=Condition)) + # optional: use linetype=group to use different linetypes
+#   geom_point(aes(x=Precursor.Pool, y=Perc.New.Synth, col=Condition, alpha=0.1)) +
+#   geom_vline(data=df.pp.medians, aes(xintercept=Precursor.Pool, col=Condition), linetype="dashed", show.legend=FALSE) +
+#   labs(title="Percent New Synthesized vs. Precursor Pool", x="Precursor Pool", y="Percent New Synthesized") +
+#   theme_bw() 
+
+# Scatterplot - Percent New Synthesized vs. Precursor Pool
 # Facet by Condition
-scatterplot.groups2 <- df.precursor.pool %>%
+scatterplot.percent.new.synth.vs.precursor.pool <- df.precursor.pool %>%
   ggplot(aes(x=Precursor.Pool, y=Perc.New.Synth, fill=Condition)) + # optional: use linetype=group to use different linetypes
   geom_point(aes(x=Precursor.Pool, y=Perc.New.Synth, col=Condition, alpha=0.1)) +
   geom_vline(data=df.pp.medians, aes(xintercept=Precursor.Pool, col=Condition), linetype="dashed", show.legend=FALSE) +
@@ -1359,19 +1434,23 @@ scatterplot.groups2 <- df.precursor.pool %>%
   labs(title="Percent New Synthesized vs. Precursor Pool", x="Precursor Pool", y="Percent New Synthesized") +
   theme_bw() 
 
+# save plot
+ggsave("Scatterplot_Percent-Newly-Synthesized_vs_Precursor-Pool.pdf",
+       plot = scatterplot.percent.new.synth.vs.precursor.pool,
+       width = 7, height = 5,
+       units = "in", # inches
+       dpi = 300)
 
 # Percent New Synthesized vs. Average Turnover Score
-# reorder Conditions using {Forcats} function fct_relevel
-avg.turnover.plot <- df.precursor.pool %>%
-  ggplot(aes(x=Avg.Turnover.Score, y=Perc.New.Synth, fill=Condition)) + # optional: use linetype=group to use different linetypes
-  geom_point(aes(x=Avg.Turnover.Score, y=Perc.New.Synth, col=Condition, alpha=0.1)) +
-  labs(title="Percent New Synthesized vs. Average Turnover Score", x="Average Turnover Score", y="Percent New Synthesized") +
-  theme_bw() 
+# avg.turnover.plot <- df.precursor.pool %>%
+#   ggplot(aes(x=Avg.Turnover.Score, y=Perc.New.Synth, fill=Condition)) + # optional: use linetype=group to use different linetypes
+#   geom_point(aes(x=Avg.Turnover.Score, y=Perc.New.Synth, col=Condition, alpha=0.1)) +
+#   labs(title="Percent New Synthesized vs. Average Turnover Score", x="Average Turnover Score", y="Percent New Synthesized") +
+#   theme_bw() 
 
 # Percent New Synthesized vs. Average Turnover Score
-# reorder Conditions using {Forcats} function fct_relevel
 # Facet by Condition 
-avg.turnover.plot2 <- df.precursor.pool %>%
+scatterplot.percent.new.synth.vs.avg.turnover.score <- df.precursor.pool %>%
   ggplot( aes(x=Avg.Turnover.Score, y=Perc.New.Synth, fill=Condition)) + # optional: use linetype=group to use different linetypes
   geom_point(aes(x=Avg.Turnover.Score, y=Perc.New.Synth, col=Condition, alpha=0.1)) +
   geom_hline(aes(yintercept=1)) +
@@ -1379,31 +1458,12 @@ avg.turnover.plot2 <- df.precursor.pool %>%
   labs(title="Percent New Synthesized vs. Average Turnover Score", x="Average Turnover Score", y="Percent New Synthesized") +
   theme_bw() 
 
-
-# Box Plots of Precursor Pool by Condition
-# reorder Conditions using {Forcats} function fct_relevel
-boxplot.precursorpool <- df.precursor.pool %>%
-  ggplot(aes(y=Precursor.Pool, fill=Condition)) + # optional: use linetype=group to use different linetypes
-  geom_boxplot(aes(y=Precursor.Pool, col=Condition, alpha=0.1)) +
-  labs(title="Precursor Pool Distribution by Condition", x="Condition", y="Precursor Pool") +
-  theme_bw() 
-
-
-# Box Plots of Average Turnover Score by Condition
-# reorder Conditions using {Forcats} function fct_relevel
-boxplot.avgturnscore <- df.precursor.pool %>%
-  ggplot(aes(y=Avg.Turnover.Score, fill=Condition)) + # optional: use linetype=group to use different linetypes
-  geom_boxplot(aes(y=Avg.Turnover.Score, col=Condition, alpha=0.1)) +
-  labs(title="Average Turnover Score Distribution by Condition", x="Condition", y="Average Turnover Score") +
-  theme_bw() 
-
-# Box Plots of Percent Newly Synthesized by Condition
-# reorder Conditions using {Forcats} function fct_relevel
-boxplot.percentnewsynth <- df.precursor.pool %>%
-  ggplot(aes(y=Perc.New.Synth, fill=Condition)) + # optional: use linetype=group to use different linetypes
-  geom_boxplot(aes(y=Perc.New.Synth, col=Condition, alpha=0.1)) +
-  labs(title="Percent Newly Sythnesized Distribution by Condition", x="Condition", y="Percent Newly Synthesized") +
-  theme_bw() 
+# save plot
+ggsave("Scatterplot_Percent-Newly-Synthesized_vs_Avg-Turnover-Score.pdf",
+       plot = scatterplot.percent.new.synth.vs.avg.turnover.score,
+       width = 7, height = 5,
+       units = "in", # inches
+       dpi = 300)
 #------------------------------------------------------------------------------------
 
 
@@ -1417,22 +1477,22 @@ hist(df.precursor.pool$Avg.Turnover.Score, breaks=100, main="Average Turnover Sc
 # average turnover score filter
 # between [0,1) where 1 is most stringent
 # the default should be 0
-ATS.threshold <- 0 # average turnover score value, used for filtering data
+ATS.threshold <- 0.70 # average turnover score value, 70% is a typically a good starting place
 
 df.pp.ats.filtered <- df.precursor.pool %>%
   filter(Avg.Turnover.Score>ATS.threshold) 
 
 density.percnew <- df.pp.ats.filtered %>%
-  mutate(Condition = fct_relevel(Condition, "OCon_D3", "OCR_D3", "OCon_D7", "OCR_D7", "OCon_D12", "OCR_D12", "OCon_D17", "OCR_D17")) %>%
+  # mutate(Condition = fct_relevel(Condition, "OCon_D3", "OCR_D3", "OCon_D7", "OCR_D7", "OCon_D12", "OCR_D12", "OCon_D17", "OCR_D17")) %>%
+  mutate(Condition = fct_relevel(Condition, conditions.relevel)) %>%
   ggplot(aes(x=Perc.New.Synth, fill=Condition)) + 
   geom_histogram(aes(y=..density..), alpha=0.2, col="black", position='identity') +
   geom_density(alpha=0.2) +
-  #geom_vline(data=df.pp.medians, aes(xintercept=Precursor.Pool, col=Condition), linetype="dashed", show.legend=FALSE) +
   facet_wrap(~ Condition, ncol = 2, scales = "fixed") +
-  labs(title="Percent Newly Synthesized Distrubtion by Condition", x="Percent Newly Synthesized", y="Density") +
+  labs(title=paste("Percent Newly Synthesized by Condition; Average Turnover Score >", ATS.threshold) , x="Percent Newly Synthesized", y="Density") +
   theme_bw() 
 #------------------------------------------------------------------------------------
 
 
 
-## END STEP 0 SCRIPT ##
+## END STEP 1 SCRIPT ##
