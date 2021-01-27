@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: December 15, 2020
+#updated: January 26, 2021
 
 
 # PROTEIN TURNOVER ANALYSIS
@@ -21,8 +21,8 @@
 
 #------------------------------------------------------------------------------------
 #set working directory
-# setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN mac
-setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN windows
+setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN mac
+# setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN windows
 #------------------------------------------------------------------------------------
 
 
@@ -46,21 +46,20 @@ package.check <- lapply(packages, FUN = function(x) {
 # test data: 2020_0529_rablab_cr_ctl_4prots.csv
 # change directory as necessary
 
-# df <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN mac
-df <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN windows
+df.input <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN mac
+# df <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN windows
 #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
 # Preliminary Filters and Cleaning:
 
-df <- df %>%
+df <- df.input %>%
   filter(Is.Decoy == "False") %>% # filter out Decoys (which are used for training algorithm in Skyline)
-  filter(!Protein=="Biognosys|iRT-Kit_WR_fusion") # some Biognosys rows -- get rid of these
-
-# convert Timepoint column to integer
-df <- df %>%
-  mutate_at(vars(Timepoint), list(~type.convert(.))) 
+  filter(!Protein=="Biognosys|iRT-Kit_WR_fusion") %>% # filter out any Biognosys rows
+  mutate_at(vars(Timepoint), list(~as.numeric(.))) %>% # convert Timepoint variable to numeric
+  mutate_at(vars(Detection.Q.Value), list(~as.numeric(.))) %>% # convert Detection.Q.Value variable to numeric
+  filter(!is.na(Detection.Q.Value)) # filter out observations which do not have numerical Detection.Q.Value
 #------------------------------------------------------------------------------------
 
 
@@ -72,8 +71,12 @@ df <- df %>%
 min.abundance <- 10**(-5) # minimum abundance
 resolution <- 0.1 # resolution for distinguishing peaks
 p.tolerance <- 0.05 # tolerance for combining masses in observed data
-diet.enrichment <- 99 # Leucine percent enrichment in diet 
-diet.enrichment <- diet.enrichment/100 # transform percent diet enrichment from 0-100 (%) to 0-1
+
+# diet enrichment
+diet.enrichment <- 99.9999 # percent enrichment of heavy Leucine in diet
+# if user specifies diet.enrichment of 100%, change to 99.9999% (since 100% will not work in FBC step)
+diet.enrichment <- ifelse(diet.enrichment==100, 99.9999, diet.enrichment)
+diet.enrichment <- diet.enrichment/100 # transform percent diet enrichment from 0-100 % to 0.0 - 1.0
 #------------------------------------------------------------------------------------
 
 
@@ -945,14 +948,15 @@ df.solutions.filtered <- df.solutions %>%
 #------------------------------------------------------------------------------------
 
 
-#------------------------------------------------------------------------------------
-# Detection Qvalue Filter
-# IDP.threshold can be between [0,1) where smaller values are more stringent. 
-# The default should be 1, corresponding to no filter, thereby retaining all of the data.
-Detection.Qvalue.threshold <- 1 # value for filtering by Detection Qvalue
-df.solutions.filtered <- df.solutions.filtered %>%
-  filter(Detection.Q.Value < Detection.Qvalue.threshold)
-#------------------------------------------------------------------------------------
+# need updated test data set with numerical Qvalues before using this chunk
+# #------------------------------------------------------------------------------------
+# # Detection Qvalue Filter
+# # IDP.threshold can be between [0,1) where smaller values are more stringent. 
+# # The default should be 1, corresponding to no filter, thereby retaining all of the data.
+# Detection.Qvalue.threshold <- 1 # value for filtering by Detection Qvalue
+# df.solutions.filtered <- df.solutions.filtered %>%
+#   filter(Detection.Q.Value < Detection.Qvalue.threshold)
+# #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
