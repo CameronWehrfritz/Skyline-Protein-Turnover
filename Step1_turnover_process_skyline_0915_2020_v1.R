@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: January 26, 2021
+#updated: January 27, 2021
 
 
 # PROTEIN TURNOVER ANALYSIS
@@ -47,7 +47,7 @@ package.check <- lapply(packages, FUN = function(x) {
 # change directory as necessary
 
 df.input <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN mac
-# df <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN windows
+# df.input <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN windows
 #------------------------------------------------------------------------------------
 
 
@@ -63,7 +63,6 @@ df <- df.input %>%
 #------------------------------------------------------------------------------------
 
 
-
 #------------------------------------------------------------------------------------
 # Set Default Values 
 
@@ -71,13 +70,24 @@ df <- df.input %>%
 min.abundance <- 10**(-5) # minimum abundance
 resolution <- 0.1 # resolution for distinguishing peaks
 p.tolerance <- 0.05 # tolerance for combining masses in observed data
+Detection.Qvalue.threshold <- 1 # value for filtering on Detection.Qvalue where 0 is the most stringent and 1 is least stringent
 
 # diet enrichment
-diet.enrichment <- 99.9999 # percent enrichment of heavy Leucine in diet
+diet.enrichment <- 99.9999 # percent enrichment of heavy Leucine in diet - Update to user specified value
 # if user specifies diet.enrichment of 100%, change to 99.9999% (since 100% will not work in FBC step)
 diet.enrichment <- ifelse(diet.enrichment==100, 99.9999, diet.enrichment)
 diet.enrichment <- diet.enrichment/100 # transform percent diet enrichment from 0-100 % to 0.0 - 1.0
 #------------------------------------------------------------------------------------
+
+
+# # need updated test data set with numerical Qvalues before using this chunk
+# #------------------------------------------------------------------------------------
+# # Detection Qvalue Filter
+# # Detection.Qvalue.threshold can be between [0,1) where smaller values are more stringent
+# # The default should be 1, corresponding to no filter, thereby retaining all of the data
+# df <- df %>%
+#   filter(Detection.Q.Value < Detection.Qvalue.threshold)
+# #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
@@ -948,17 +958,6 @@ df.solutions.filtered <- df.solutions %>%
 #------------------------------------------------------------------------------------
 
 
-# need updated test data set with numerical Qvalues before using this chunk
-# #------------------------------------------------------------------------------------
-# # Detection Qvalue Filter
-# # IDP.threshold can be between [0,1) where smaller values are more stringent. 
-# # The default should be 1, corresponding to no filter, thereby retaining all of the data.
-# Detection.Qvalue.threshold <- 1 # value for filtering by Detection Qvalue
-# df.solutions.filtered <- df.solutions.filtered %>%
-#   filter(Detection.Q.Value < Detection.Qvalue.threshold)
-# #------------------------------------------------------------------------------------
-
-
 #------------------------------------------------------------------------------------
 # Rearrange variables in df.solutions.filtered
 # and write out this filtered version
@@ -1499,4 +1498,4 @@ density.percnew <- df.pp.ats.filtered %>%
 
 
 
-## END STEP 1 SCRIPT ##
+## END SCRIPT STEP 1 ##
