@@ -28,7 +28,7 @@
 
 #------------------------------------------------------------------------------------
 #set working directory
-setwd("C:/Users/alimarsh/Documents/Turnover R scripts/Skyline-Protein-Turnover-master") # VPN mac
+setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN mac
 # setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN windows
 #------------------------------------------------------------------------------------
 
@@ -53,7 +53,7 @@ package.check <- lapply(packages, FUN = function(x) {
 # test data: 2020_0529_rablab_cr_ctl_4prots.csv
 # change directory as necessary
 
-df.input <- read.csv("report.csv", stringsAsFactors = F) #VPN mac
+df.input <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN mac
 # df.input <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN windows
 #------------------------------------------------------------------------------------
 
@@ -1514,5 +1514,3 @@ density.percnew <- df.pp.ats.filtered %>%
 #------------------------------------------------------------------------------------
 
 
-
-## END SCRIPT STEP 1 ##
