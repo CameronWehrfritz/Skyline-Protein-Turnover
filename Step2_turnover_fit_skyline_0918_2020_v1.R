@@ -386,5 +386,3 @@ write.csv(df.x.int.medians, file = "Table_step2_xintercepts.csv", row.names = FA
 #------------------------------------------------------------------------------------
 
 
-
-## END STEP 2 SCRIPT ##
