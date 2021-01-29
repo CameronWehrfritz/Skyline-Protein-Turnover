@@ -56,8 +56,8 @@ df.input <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnove
 
 df <- df.input %>%
   filter(Is.Decoy == "False") %>% # filter out Decoys (which are used for training algorithm in Skyline)
-  filter(!Protein=="Biognosys|iRT-Kit_WR_fusion") %>% # filter out any Biognosys rows
-  filter(! Fragment.Ion=="precursor [M-1]") %>% # FOR TESTING PURPOSES ONLY -- filter out [M-1] precursor observations -- because this casues errors in the matrix math of the FBC step -- FOR TESTING PURPOSES ONLY
+  filter(!Protein=="Biognosys|iRT-Kit_WR_fusion") %>% # filter out any Biognosys rows (asked Nate for a brief explanation to make into a comment here)
+  filter(! Fragment.Ion=="precursor [M-1]") %>% # filter out [M-1] precursor observations (since these cause an issue with building Matrix A in the FBC step)
   mutate_at(vars(Timepoint), list(~as.numeric(.))) %>% # convert Timepoint variable to numeric
   mutate_at(vars(Detection.Q.Value), list(~as.numeric(.))) %>% # convert Detection.Q.Value variable to numeric
   mutate_at(vars(Detection.Q.Value), list(~ifelse(is.na(.), 0.00123, .))) %>% # FOR TESTING PURPOSES ONLY -- if Qvalue is missing replace NA with value=0.00123 -- TO BE REMOVED IN OFFICIAL TOOL -- FOR TESTING PURPOSES ONLY
