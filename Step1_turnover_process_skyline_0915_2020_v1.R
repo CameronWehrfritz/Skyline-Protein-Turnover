@@ -19,16 +19,23 @@
 #### Begin Program ###
 ######################
 
+
+
+#------------------------------------------------------------------------------------
+# START CODE FOR RUNNING IN RSTUDIO (comment out if running from TurnoveR)
+#------------------------------------------------------------------------------------
+
+
 #------------------------------------------------------------------------------------
 #set working directory
-setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN mac
+setwd("C:/Users/alimarsh/Documents/Turnover R scripts/Skyline-Protein-Turnover-master") # VPN mac
 # setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN windows
 #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
 # PACKAGES #
-packages = c("tidyr", "dplyr", "tibble", "ggplot2", "stringr",  "purrr", 
+packages = c("tidyr", "dplyr", "tibble", "ggplot2", "stringr",  "purrr",
              "reshape2",  "gridExtra", "forcats", "pracma", "seqinr", "hablar")
 
 package.check <- lapply(packages, FUN = function(x) {
@@ -46,9 +53,33 @@ package.check <- lapply(packages, FUN = function(x) {
 # test data: 2020_0529_rablab_cr_ctl_4prots.csv
 # change directory as necessary
 
-df.input <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN mac
+df.input <- read.csv("report.csv", stringsAsFactors = F) #VPN mac
 # df.input <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN windows
 #------------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------------
+# Set Default Values
+
+## these may be user defined in the future
+min.abundance <- 10**(-5) # minimum abundance
+resolution <- 0.1 # resolution for distinguishing peaks
+p.tolerance <- 0.05 # tolerance for combining masses in observed data
+Detection.Qvalue.threshold <- 1 # value for filtering on Detection.Qvalue where 0 is the most stringent and 1 is least stringent
+
+# diet enrichment
+diet.enrichment <- 99.9999 # percent enrichment of heavy Leucine in diet - Update to user specified value
+# if user specifies diet.enrichment of 100%, change to 99.9999% (since 100% will not work in FBC step)
+diet.enrichment <- ifelse(diet.enrichment==100, 99.9999, diet.enrichment)
+diet.enrichment <- diet.enrichment/100 # transform percent diet enrichment from 0-100 % to 0.0 - 1.0
+#------------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------------
+# END CODE FOR RUNNING IN RSTUDIO
+#------------------------------------------------------------------------------------
+
+
 
 
 #------------------------------------------------------------------------------------
@@ -64,22 +95,6 @@ df <- df.input %>%
   filter(!is.na(Detection.Q.Value)) # filter out observations which do not have numerical Detection.Q.Value
 #------------------------------------------------------------------------------------
 
-
-#------------------------------------------------------------------------------------
-# Set Default Values 
-
-## these may be user defined in the future
-min.abundance <- 10**(-5) # minimum abundance
-resolution <- 0.1 # resolution for distinguishing peaks
-p.tolerance <- 0.05 # tolerance for combining masses in observed data
-Detection.Qvalue.threshold <- 1 # value for filtering on Detection.Qvalue where 0 is the most stringent and 1 is least stringent
-
-# diet enrichment
-diet.enrichment <- 99.9999 # percent enrichment of heavy Leucine in diet - Update to user specified value
-# if user specifies diet.enrichment of 100%, change to 99.9999% (since 100% will not work in FBC step)
-diet.enrichment <- ifelse(diet.enrichment==100, 99.9999, diet.enrichment)
-diet.enrichment <- diet.enrichment/100 # transform percent diet enrichment from 0-100 % to 0.0 - 1.0
-#------------------------------------------------------------------------------------
 
 
 # # need updated test data set with numerical Qvalues before using this chunk
