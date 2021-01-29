@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: January 27, 2021
+#updated: January 28, 2021
 
 
 # PROTEIN TURNOVER ANALYSIS
@@ -57,8 +57,10 @@ df.input <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnove
 df <- df.input %>%
   filter(Is.Decoy == "False") %>% # filter out Decoys (which are used for training algorithm in Skyline)
   filter(!Protein=="Biognosys|iRT-Kit_WR_fusion") %>% # filter out any Biognosys rows
+  filter(! Fragment.Ion=="precursor [M-1]") %>% # FOR TESTING PURPOSES ONLY -- filter out [M-1] precursor observations -- because this casues errors in the matrix math of the FBC step -- FOR TESTING PURPOSES ONLY
   mutate_at(vars(Timepoint), list(~as.numeric(.))) %>% # convert Timepoint variable to numeric
   mutate_at(vars(Detection.Q.Value), list(~as.numeric(.))) %>% # convert Detection.Q.Value variable to numeric
+  mutate_at(vars(Detection.Q.Value), list(~ifelse(is.na(.), 0.00123, .))) %>% # FOR TESTING PURPOSES ONLY -- if Qvalue is missing replace NA with value=0.00123 -- TO BE REMOVED IN OFFICIAL TOOL -- FOR TESTING PURPOSES ONLY
   filter(!is.na(Detection.Q.Value)) # filter out observations which do not have numerical Detection.Q.Value
 #------------------------------------------------------------------------------------
 
@@ -81,13 +83,13 @@ diet.enrichment <- diet.enrichment/100 # transform percent diet enrichment from 
 
 
 # # need updated test data set with numerical Qvalues before using this chunk
-# #------------------------------------------------------------------------------------
-# # Detection Qvalue Filter
-# # Detection.Qvalue.threshold can be between [0,1) where smaller values are more stringent
-# # The default should be 1, corresponding to no filter, thereby retaining all of the data
-# df <- df %>%
-#   filter(Detection.Q.Value < Detection.Qvalue.threshold)
-# #------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------
+# Detection Qvalue Filter
+# Detection.Qvalue.threshold can be between [0,1) where smaller values are more stringent
+# The default should be 1, corresponding to no filter, thereby retaining all of the data
+df <- df %>%
+  filter(Detection.Q.Value < Detection.Qvalue.threshold)
+#------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
@@ -914,7 +916,7 @@ for(k in seq_along(proteins)){
 df.solutions <- df.solutions[1:(counter-1),] 
 
 # write out
-write.csv(df.solutions, file="df_solutions_date_test.csv", row.names = FALSE)
+write.csv(df.solutions, file="df_solutions_date.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
@@ -1413,7 +1415,7 @@ boxplot.percent.newly.synthesized <- df.precursor.pool %>%
   theme_bw() 
 
 # save plot
-ggsave("Density_percent-newly-synthesized.pdf",
+ggsave("Boxplot_percent-newly-synthesized.pdf",
        plot = boxplot.percent.newly.synthesized,
        width = 7, height = 5,
        units = "in", # inches
