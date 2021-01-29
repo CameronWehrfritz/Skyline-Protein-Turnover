@@ -19,6 +19,13 @@
 #### Begin Program ###
 ######################
 
+
+
+#------------------------------------------------------------------------------------
+# START CODE FOR RUNNING IN RSTUDIO (comment out if running from TurnoveR)
+#------------------------------------------------------------------------------------
+
+
 #------------------------------------------------------------------------------------
 #set working directory
 setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN mac
@@ -28,7 +35,7 @@ setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover
 
 #------------------------------------------------------------------------------------
 # PACKAGES #
-packages = c("tidyr", "dplyr", "tibble", "ggplot2", "stringr",  "purrr", 
+packages = c("tidyr", "dplyr", "tibble", "ggplot2", "stringr",  "purrr",
              "reshape2",  "gridExtra", "forcats", "pracma", "seqinr", "hablar")
 
 package.check <- lapply(packages, FUN = function(x) {
@@ -52,21 +59,7 @@ df.input <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnove
 
 
 #------------------------------------------------------------------------------------
-# Preliminary Filters and Cleaning:
-
-df <- df.input %>%
-  filter(Is.Decoy == "False") %>% # filter out Decoys (which are used for training algorithm in Skyline)
-  filter(!Protein=="Biognosys|iRT-Kit_WR_fusion") %>% # filter out any Biognosys rows
-  filter(! Fragment.Ion=="precursor [M-1]") %>% # FOR TESTING PURPOSES ONLY -- filter out [M-1] precursor observations -- because this casues errors in the matrix math of the FBC step -- FOR TESTING PURPOSES ONLY
-  mutate_at(vars(Timepoint), list(~as.numeric(.))) %>% # convert Timepoint variable to numeric
-  mutate_at(vars(Detection.Q.Value), list(~as.numeric(.))) %>% # convert Detection.Q.Value variable to numeric
-  mutate_at(vars(Detection.Q.Value), list(~ifelse(is.na(.), 0.00123, .))) %>% # FOR TESTING PURPOSES ONLY -- if Qvalue is missing replace NA with value=0.00123 -- TO BE REMOVED IN OFFICIAL TOOL -- FOR TESTING PURPOSES ONLY
-  filter(!is.na(Detection.Q.Value)) # filter out observations which do not have numerical Detection.Q.Value
-#------------------------------------------------------------------------------------
-
-
-#------------------------------------------------------------------------------------
-# Set Default Values 
+# Set Default Values
 
 ## these may be user defined in the future
 min.abundance <- 10**(-5) # minimum abundance
@@ -80,6 +73,28 @@ diet.enrichment <- 99.9999 # percent enrichment of heavy Leucine in diet - Updat
 diet.enrichment <- ifelse(diet.enrichment==100, 99.9999, diet.enrichment)
 diet.enrichment <- diet.enrichment/100 # transform percent diet enrichment from 0-100 % to 0.0 - 1.0
 #------------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------------
+# END CODE FOR RUNNING IN RSTUDIO
+#------------------------------------------------------------------------------------
+
+
+
+
+#------------------------------------------------------------------------------------
+# Preliminary Filters and Cleaning:
+
+df <- df.input %>%
+  filter(Is.Decoy == "False") %>% # filter out Decoys (which are used for training algorithm in Skyline)
+  filter(!Protein=="Biognosys|iRT-Kit_WR_fusion") %>% # filter out any Biognosys rows
+  filter(! Fragment.Ion=="precursor [M-1]") %>% # FOR TESTING PURPOSES ONLY -- filter out [M-1] precursor observations -- because this casues errors in the matrix math of the FBC step -- FOR TESTING PURPOSES ONLY
+  mutate_at(vars(Timepoint), list(~as.numeric(.))) %>% # convert Timepoint variable to numeric
+  mutate_at(vars(Detection.Q.Value), list(~as.numeric(.))) %>% # convert Detection.Q.Value variable to numeric
+  mutate_at(vars(Detection.Q.Value), list(~ifelse(is.na(.), 0.00123, .))) %>% # FOR TESTING PURPOSES ONLY -- if Qvalue is missing replace NA with value=0.00123 -- TO BE REMOVED IN OFFICIAL TOOL -- FOR TESTING PURPOSES ONLY
+  filter(!is.na(Detection.Q.Value)) # filter out observations which do not have numerical Detection.Q.Value
+#------------------------------------------------------------------------------------
+
 
 
 # # need updated test data set with numerical Qvalues before using this chunk
@@ -1499,5 +1514,3 @@ density.percnew <- df.pp.ats.filtered %>%
 #------------------------------------------------------------------------------------
 
 
-
-## END SCRIPT STEP 1 ##

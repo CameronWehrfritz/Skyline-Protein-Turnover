@@ -19,6 +19,13 @@
 #### Begin Program ###
 ######################
 
+
+
+#------------------------------------------------------------------------------------
+# START CODE FOR RUNNING IN RSTUDIO (comment out if running from TurnoveR)
+#------------------------------------------------------------------------------------
+
+
 # set working directory
 #setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/")
 setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/") #VPN
@@ -36,7 +43,6 @@ package.check <- lapply(packages, FUN = function(x) {
 })
 #------------------------------------------------------------------------------------
 
-
 #------------------------------------------------------------------------------------
 # LOAD DATA #
 
@@ -48,6 +54,12 @@ data.s <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_
 data.m <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # mac
 # data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # windows
 #------------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------------
+# END CODE FOR RUNNING IN RSTUDIO
+#------------------------------------------------------------------------------------
+
 
 
 #------------------------------------------------------------------------------------
@@ -374,5 +386,3 @@ write.csv(df.x.int.medians, file = "Table_step2_xintercepts.csv", row.names = FA
 #------------------------------------------------------------------------------------
 
 
-
-## END STEP 2 SCRIPT ##

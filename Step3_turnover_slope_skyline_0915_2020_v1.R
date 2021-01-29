@@ -15,6 +15,12 @@
 ######################
 
 
+
+#------------------------------------------------------------------------------------
+# START CODE FOR RUNNING IN RSTUDIO (comment out if running from TurnoveR)
+#------------------------------------------------------------------------------------
+
+
 #------------------------------------------------------------------------------------
 #set working directory
 #setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN mac
@@ -46,6 +52,12 @@ data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover
 # medians of x-intercepts by cohort from step 3
 df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Table_step3_xintercepts.csv", stringsAsFactors = F) #VPN
 #------------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------------
+# END CODE FOR RUNNING IN RSTUDIO
+#------------------------------------------------------------------------------------
+
 
 
 #------------------------------------------------------------------------------------
