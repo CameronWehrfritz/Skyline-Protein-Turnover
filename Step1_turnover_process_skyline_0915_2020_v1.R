@@ -59,20 +59,6 @@ df.input <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnove
 
 
 #------------------------------------------------------------------------------------
-# Preliminary Filters and Cleaning:
-
-df <- df.input %>%
-  filter(Is.Decoy == "False") %>% # filter out Decoys (which are used for training algorithm in Skyline)
-  filter(!Protein=="Biognosys|iRT-Kit_WR_fusion") %>% # filter out Biognosys rows, since these are spiked in to the sample for Quality Control
-  filter(! Fragment.Ion=="precursor [M-1]") %>% # filter out [M-1] precursor observations (since these cause an issue with building Matrix A in the FBC step)
-  mutate_at(vars(Timepoint), list(~as.numeric(.))) %>% # convert Timepoint variable to numeric
-  mutate_at(vars(Detection.Q.Value), list(~as.numeric(.))) %>% # convert Detection.Q.Value variable to numeric
-  mutate_at(vars(Detection.Q.Value), list(~ifelse(is.na(.), 0.00123, .))) %>% # FOR TESTING PURPOSES ONLY -- if Qvalue is missing replace NA with value=0.00123 -- TO BE REMOVED IN OFFICIAL TOOL -- FOR TESTING PURPOSES ONLY
-  filter(!is.na(Detection.Q.Value)) # filter out observations which do not have numerical Detection.Q.Value
-#------------------------------------------------------------------------------------
-
-
-#------------------------------------------------------------------------------------
 # Set Default Values 
 
 ## these may be user defined in the future
@@ -101,8 +87,8 @@ diet.enrichment <- diet.enrichment/100 # transform percent diet enrichment from 
 
 df <- df.input %>%
   filter(Is.Decoy == "False") %>% # filter out Decoys (which are used for training algorithm in Skyline)
-  filter(!Protein=="Biognosys|iRT-Kit_WR_fusion") %>% # filter out any Biognosys rows
-  filter(! Fragment.Ion=="precursor [M-1]") %>% # FOR TESTING PURPOSES ONLY -- filter out [M-1] precursor observations -- because this casues errors in the matrix math of the FBC step -- FOR TESTING PURPOSES ONLY
+  filter(!Protein=="Biognosys|iRT-Kit_WR_fusion") %>% # filter out Biognosys rows, since these are spiked in to the sample for Quality Control
+  filter(! Fragment.Ion=="precursor [M-1]") %>% # filter out [M-1] precursor observations (since these cause an issue with building Matrix A in the FBC step)
   mutate_at(vars(Timepoint), list(~as.numeric(.))) %>% # convert Timepoint variable to numeric
   mutate_at(vars(Detection.Q.Value), list(~as.numeric(.))) %>% # convert Detection.Q.Value variable to numeric
   mutate_at(vars(Detection.Q.Value), list(~ifelse(is.na(.), 0.00123, .))) %>% # FOR TESTING PURPOSES ONLY -- if Qvalue is missing replace NA with value=0.00123 -- TO BE REMOVED IN OFFICIAL TOOL -- FOR TESTING PURPOSES ONLY
@@ -257,7 +243,7 @@ modify.mol.formula.fun <- function(molecular.formula, num.heavy.leucines){
     
     df.mod.mol.formula <- df.mod.mol.formula %>% 
       convert(chr(Molecular.Formula), int(Number.Heavy.Leucines)) # convert column types: Molecular.Formula to character, Number.Heavy.Leucines to integer
-      
+    
     df.mod.mol.formula[1,] <- list(molecular.formula, 0) # write to first row of tibble, which is 0 heavy leucines and thus not molecular.formula is not modified
     
     mol.formula.pieces <- unlist(strsplit(molecular.formula, "")) # molecular formula pieces
@@ -621,7 +607,7 @@ df.test <- df %>%
 df.solutions <- data.frame(matrix(NA,
                                   nrow=length(unique(df.test$Replicate.Name))*length(unique(df.test$Peptide))*length(unique(df.test$Product.Charge)*max(df.test$Number.Heavy.Leucines)),
                                   ncol=13))
-                           
+
 # name columns
 names(df.solutions)[1:13] <- c("Protein.Gene", "Protein.Accession", "Peptide", "Modified.Peptide", "Replicate.Name", "Condition",
                                "Timepoint", "Product.Charge", "Number.Heavy.Leucines", "Detection.Q.Value", "Total.Area.MS1", 
@@ -799,7 +785,7 @@ for(k in seq_along(proteins)){
               rows.write.out <- counter:(counter+length(unique(df.charge$Number.Heavy.Leucines))-1)
               counter <- max(rows.write.out) + 1 # increment counter
               print(counter)
-      
+              
               # Write Out to df.solutions:
               df.solutions[rows.write.out, "FBC.Solution"] <- solutions
               # Replicate Name
