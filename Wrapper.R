@@ -16,7 +16,7 @@ invisible(lapply(packages, library, character.only = TRUE)) # add imported packa
 
 
 filepath <<- "C:/Users/alimarsh/Documents/Turnover/Data/report.csv"
-tool.dir <<- "C:\\Users\\alimarsh\\Documents\\Turnover\\ToolHolder"
+tool.dir <<- "C:\\Users\\alimarsh\\Documents\\Turnover\\ToolHolder\\Skyline-Protein-Turnover"
 diet.enrichment <- as.numeric ("0.999999") # Leucine percent enrichment in diet
 min.avg.turnover.score <<- as.numeric ("0")
 min.isotope.dot.product <<- as.numeric ("0")
@@ -112,7 +112,7 @@ if (is.null(df.input$Replicate.Name)) {
 
 #------------------------------------------------------------------------------------
 # RUN STEP 1 #
-source(paste(tool.dir, "Step1.R", sep="/"))
+source(paste(tool.dir, "Step1_turnover_process_skyline_0915_2020_v1.R", sep="/"))
 #------------------------------------------------------------------------------------
 
 
@@ -125,7 +125,7 @@ data.s.holder <- read.csv(paste(getwd(),"/Step1_Data_Output_Skyline_singleleucin
 data.m.holder <- read.csv(paste(getwd(),"/Step1_Data_Output_Skyline_multileucine_peps_date.csv", sep=""), stringsAsFactors = F)
 data.s <- data.s.holder
 data.m <- data.m.holder
-source(paste(tool.dir, "Step2.R", sep="/"))
+source(paste(tool.dir, "Step2_turnover_fit_skyline_0918_2020_v1.R", sep="/"))
 
 #------------------------------------------------------------------------------------
 
@@ -138,7 +138,7 @@ data.m <- data.m.holder
 # medians of x-intercepts by cohort from step 3
 df.x.int.medians <- read.csv(paste(getwd(),"/Table_step2_xintercepts.csv", sep=""), stringsAsFactors = F)
 
-source(paste(tool.dir, "Step3.R", sep="/"))
+source(paste(tool.dir, "Step3_turnover_slope_skyline_0915_2020_v1.R", sep="/"))
 #------------------------------------------------------------------------------------
 
 
@@ -149,7 +149,7 @@ data.m <- data.m.holder
 # medians of x-intercepts by cohort from step 3
 df.x.int.medians <- read.csv(paste(getwd(),"/Table_step2_xintercepts.csv", sep=""), stringsAsFactors = F)
 
-source(paste(tool.dir, "Step4.R", sep="/"))
+source(paste(tool.dir, "Step4_turnover_statistics_skyline_0918_2020_v1.R", sep="/"))
 #------------------------------------------------------------------------------------
 
 
