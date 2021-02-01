@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------------
 # PACKAGES #
 
-packages = c("tidyr", "dplyr", "plyr", "reshape2", "seqinr", "ggplot2", "coefplot", 
+packages = c("tidyr", "plyr", "dplyr", "reshape2", "seqinr", "ggplot2", "coefplot", 
              "forcats", "tibble", "stringr", "purrr", "gridExtra", "pracma", "hablar")  
 
 invisible(lapply(packages, library, character.only = TRUE)) # add imported packages to library
@@ -41,6 +41,7 @@ setwd("C:/Users/alimarsh/Documents/Turnover/Data")
 # # LOAD ARGUMENTS FROM SKYLINE #
 # 
 # arguments <- commandArgs(trailingOnly=TRUE)
+# # arguments <- c("C:\\Users\\alimarsh\\Documents\\Turnover\\Data\\generated.csv", "C:\\Users\\alimarsh\\Documents\\Turnover\\Skyline-Protein-Turnover", "100", "0", "0", "Data", "1")
 # cat(length (arguments))
 # if ( length (arguments) != 7)
 #   # expected arguments not present -- error
@@ -101,7 +102,7 @@ if (is.null(df.input$Replicate.Name)) {
   df.input <- rename_with(df.input, .fn = function(vector){
     return(c("Protein", "Replicate.Name", "Protein.Description", "Protein.Accession", "Protein.Gene", "Peptide", 
              "File.Name", "Timepoint", "Condition", "Precursor.Charge", "Precursor.Mz", "Molecule.Formula", 
-             "Precursor.Neutral.Mass", "Modified.Sequence", "Is.Decoy", "Detection.Q.Value", "Total.Area.Ms1", 
+             "Precursor.Neutral.Mass", "Modified.Sequence", "Is.Decoy", "Detection.Q.Value", "Total.Area.MS1", 
              "Isotope.Dot.Product", "Product.Mz", "Product.Charge", "Fragment.Ion", "Isotope.Dist.Index", 
              "Isotope.Dist.Rank", "Isotope.Dist.Proportion", "Fragment.Ion.Type", "Area"))
     
@@ -155,7 +156,7 @@ source(paste(tool.dir, "Step4_turnover_statistics_skyline_0918_2020_v1.R", sep="
 
 
 cat("\n---------------------------------------------------------------------------------------")
-cat(" ALL COMPLETED ")
+cat(" COMPLETED ")
 cat("---------------------------------------------------------------------------------------\n\n")
 cat("Output at: ")
 cat(getwd())
