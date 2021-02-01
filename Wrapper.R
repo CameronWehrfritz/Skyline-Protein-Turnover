@@ -43,7 +43,8 @@ setwd("C:/Users/alimarsh/Documents/Turnover/Data")
 # # LOAD ARGUMENTS FROM SKYLINE #
 # 
 # arguments <- commandArgs(trailingOnly=TRUE)
-# #arguments <- c("C:\\Users\\alimarsh\\Documents\\Turnover\\Data\\generated.csv", "C:\\Users\\alimarsh\\Documents\\Turnover\\Skyline-Protein-Turnover", "100", "0", "0", "Data", , "OCR", "1", "1")
+# #arguments <- c("C:\\Users\\alimarsh\\AppData\\Local\\Temp\\TurnoveR_Protein_Turnover_Report.csv", "C:\\Branches\\Skylinework20210127_Protein_turnover_tool_updates\\ProteoWizard\\pwiz\\pwiz_tools\\Skyline\\bin\\x64\\Debug\\Tools\\Tool", "99", "0", "0", "Data", "OCR", "1", "1")
+# #arguments <- c("C:\\Users\\alimarsh\\Documents\\Turnover\\Data\\generated.csv", "C:\\Users\\alimarsh\\Documents\\Turnover\\Skyline-Protein-Turnover", "100", "0", "0", "Data", "OCR", "1", "1")
 # cat(length (arguments))
 # if ( length (arguments) != 9)
 #   # expected arguments not present -- error
@@ -58,7 +59,7 @@ setwd("C:/Users/alimarsh/Documents/Turnover/Data")
 #   #report file is brought in as an argument, this is specified in TestArgsCollector.properties
 # 
 #   #TODO put [arg] back for all
-#   if (i==1) filepath <<- "C:/Users/alimarsh/Documents/Turnover/Data/report.csv" #arg
+#   if (i==1) filepath <<- arg
 #   if (i==2) tool.dir <<- arg
 #   if (i==3) diet.enrichment <- as.numeric (arg) / 100 # Leucine percent enrichment in diet
 #   if (i==4) min.avg.turnover.score <<- as.numeric (arg)
@@ -71,7 +72,6 @@ setwd("C:/Users/alimarsh/Documents/Turnover/Data")
 # 
 # dir.create(file.path(getwd(), folder.name), showWarnings = FALSE) # Create folder for script output
 # setwd(file.path(getwd(), folder.name))
-# 
 
 
 #------------------------------------------------------------------------------------
