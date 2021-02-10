@@ -21,7 +21,7 @@ diet.enrichment <- as.numeric ("0.999999") # Leucine percent enrichment in diet
 min.avg.turnover.score <<- as.numeric ("0")
 min.isotope.dot.product <<- as.numeric ("0")
 folder.name <- "Data"
-Reference.Cohort <- "OCR"
+reference.cohort <- "OCR"
 Detection.Qvalue.threshold <- as.numeric ("1")
 Has.Q.Values <- TRUE
 
@@ -65,7 +65,7 @@ setwd("C:/Users/alimarsh/Documents/Turnover/Data")
 #   if (i==4) min.avg.turnover.score <<- as.numeric (arg)
 #   if (i==5) min.isotope.dot.product <<- as.numeric (arg)
 #   if (i==6) folder.name <- arg
-#   if (i==7) Reference.Cohort <- arg
+#   if (i==7) reference.cohort <- arg
 #   if (i==8) Detection.Qvalue.threshold <- as.numeric (arg)
 #   if (i==9) Has.Q.Values <- ifelse(arg=="1", TRUE, FALSE)
 # }
@@ -130,7 +130,7 @@ data.s.holder <- read.csv(paste(getwd(),"/Step1_Data_Output_Skyline_singleleucin
 data.m.holder <- read.csv(paste(getwd(),"/Step1_Data_Output_Skyline_multileucine_peps_date.csv", sep=""), stringsAsFactors = F)
 data.s <- data.s.holder
 data.m <- data.m.holder
-source(paste(tool.dir, "Step2_turnover_fit_skyline_0918_2020_v1.R", sep="/"))
+source(paste(tool.dir, "Step2_turnover_fit_skyline_0208_2021_v2.R", sep="/"))
 
 #------------------------------------------------------------------------------------
 
@@ -141,9 +141,9 @@ source(paste(tool.dir, "Step2_turnover_fit_skyline_0918_2020_v1.R", sep="/"))
 data.s <- data.s.holder
 data.m <- data.m.holder
 # medians of x-intercepts by cohort from step 3
-df.x.int.medians <- read.csv(paste(getwd(),"/Table_step2_xintercepts.csv", sep=""), stringsAsFactors = F)
+df.x.int.medians <- read.csv(paste(getwd(),"/Table_step2_xintercepts_date.csv", sep=""), stringsAsFactors = F)
 
-source(paste(tool.dir, "Step3_turnover_slope_skyline_0915_2020_v1.R", sep="/"))
+source(paste(tool.dir, "Step3_turnover_slope_skyline_0208_2021_v2.R", sep="/"))
 #------------------------------------------------------------------------------------
 
 
@@ -152,9 +152,9 @@ source(paste(tool.dir, "Step3_turnover_slope_skyline_0915_2020_v1.R", sep="/"))
 data.s <- data.s.holder
 data.m <- data.m.holder
 # medians of x-intercepts by cohort from step 3
-df.x.int.medians <- read.csv(paste(getwd(),"/Table_step2_xintercepts.csv", sep=""), stringsAsFactors = F)
+df.x.int.medians <- read.csv(paste(getwd(),"/Table_step2_xintercepts_date.csv", sep=""), stringsAsFactors = F)
 
-source(paste(tool.dir, "Step4_turnover_statistics_skyline_0918_2020_v1.R", sep="/"))
+source(paste(tool.dir, "Step4_turnover_statistics_skyline_0208_2021_v2.R", sep="/"))
 #------------------------------------------------------------------------------------
 
 

@@ -56,6 +56,8 @@ data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover
 data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # PC
 #------------------------------------------------------------------------------------
 
+# reference cohort
+reference.cohort <- "OCon" # this should be assigned by the user # TO DO
 
 #------------------------------------------------------------------------------------
 # END CODE FOR RUNNING IN RSTUDIO
@@ -95,9 +97,6 @@ df <- df %>%
 
 # cohorts
 cohorts <- unique(df$Cohort)
-
-# reference cohort
-reference.cohort <- "OCon" # this should be assigned by the user # TO DO
 
 # make a cohort vector for looping through all comparisons
 cohorts.loop <- cohorts[!cohorts==reference.cohort] # keep all cohorts except for the reference cohort
