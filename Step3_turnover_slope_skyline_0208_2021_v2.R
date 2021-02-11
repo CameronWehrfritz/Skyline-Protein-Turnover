@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: February 08, 2021
+#updated: February 11, 2021
 
 # PROTEIN TURNOVER ANALYSIS
 # STEP 3:
@@ -52,8 +52,7 @@ data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover
 data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # PC
 
 # medians of x-intercepts by cohort from Step 2 
-# df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Table_step3_xintercepts.csv", stringsAsFactors = F) # PC
-df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Cameron_development/Step2/Table_step2_xintercepts_0208_2021_v1.csv", stringsAsFactors = F) # PC - cameron_development
+df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Table_step2_xintercepts_date.csv", stringsAsFactors = F) # PC
 #------------------------------------------------------------------------------------
 
 # reference cohort

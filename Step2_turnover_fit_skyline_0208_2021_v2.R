@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: February 09, 2021
+#updated: February 11, 2021
 
 # PROTEIN TURNOVER ANALYSIS
 # STEP 2:
@@ -26,8 +26,8 @@
 
 #------------------------------------------------------------------------------------
 # set working directory
-#setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Cameron_development/")
-setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Cameron_development/") #VPN
+#setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Cameron_development/") # MAC
+setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Cameron_development/") # PC
 #------------------------------------------------------------------------------------
 
 
@@ -314,7 +314,7 @@ graphics.off()
 #------------------------------------------------------------------------------------
 # Q value #
 
-## since Qvalue package isn't working, let's remove Qvalue column
+# since Qvalue package isn't working, let's remove Qvalue column
 df.model.output <- df.model.output %>%
   select(-Qvalue)
 #------------------------------------------------------------------------------------
