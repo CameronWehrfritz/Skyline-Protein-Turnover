@@ -3,12 +3,12 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: September 28, 2020
+#updated: February 8, 2021
 
 # PROTEIN TURNOVER ANALYSIS
-# STEP 3:
-# NON LINEAR FIT OF TURNOVER 
-# CALCULATE X-INTERCEPTS
+# STEP 2:
+# NON LINEAR MODELING OF PERCENT NEWLY SYNTHESIZED  
+# & CALCULATE X-INTERCEPTS
 #
 # OUTPUT: 
 # PDF of regression plots (both cohorts in the same plot) 
@@ -47,12 +47,12 @@ package.check <- lapply(packages, FUN = function(x) {
 # LOAD DATA #
 
 # single leucine data set (1 leucine)
-data.s <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) # mac
-# data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) # windows
+# data.s <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) # mac
+data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_singleleucine_peps_test.csv", stringsAsFactors = F) # windows
 
 # multiple leucine data set (2,3,4 leucines)
-data.m <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # mac
-# data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # windows
+# data.m <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # mac
+data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # windows
 #------------------------------------------------------------------------------------
 
 
@@ -126,22 +126,22 @@ for(i in 1:length(unique(df$Protein.Accession)) ){
   print(i)
   
   # increase row.index counter by 2 each cycle, since we are writing out data for both cohorts (WT and KO) during each iteration
-  row.index <- row.index + 2
+  row.index <- row.index + 2 # will need to change this for generalized treatment groups 
   
   # subset combined data for cohort and protein 
-  data_loop <- subset(df, Protein.Accession == prots[i]) 
+  data.loop <- subset(df, Protein.Accession == prots[i]) 
   
   # split data by cohort
-  data.ko <- subset(data_loop, Cohort == "OCR") # calorie restriction
-  data.wt <- subset(data_loop, Cohort == "OCon") # control (aka WildType 'WT')
+  data.ko <- subset(data.loop, Cohort == "OCR") # calorie restriction
+  data.wt <- subset(data.loop, Cohort == "OCon") # control (aka WildType 'WT')
   
   ## 
   # added 1/22/21 - work in progress
   # split data by cohort
-  X <- split(df, df$Cohort)
+  data.split.list <- split(df, df$Cohort)
   
-  # use lapply to convert each list in X to a data frame
-  Y <- lapply(seq_along(X), function(x) as.data.frame(X[[x]])) 
+  # convert each list in data.split.list to a data frame
+  Y <- lapply(seq_along(data.split.list), function(x) as.data.frame(data.split.list[[x]])) 
   
   # use list2env to assign each list to an object in the global environment
   names(Y) <- LETTERS[1:length(cohorts)] # assign names using (the appropriate number of) capitalized letters
@@ -366,7 +366,7 @@ write.csv(df.model.output, file = "Table_step2_output_date.csv", row.names = FAL
 df.filtered <- subset(df.model.output, b<0 &  X.Intercept<min(time) & X.Intercept>0 & Pvalue.a<0.05 & Pvalue.b<0.05)
 
 # write out filtered df frame
-write.csv( df.filtered, file = "Table_step2_output_filtered.csv", row.names = FALSE)
+write.csv(df.filtered, file = "Table_step2_output_filtered.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
@@ -386,3 +386,4 @@ write.csv(df.x.int.medians, file = "Table_step2_xintercepts.csv", row.names = FA
 #------------------------------------------------------------------------------------
 
 
+# END
