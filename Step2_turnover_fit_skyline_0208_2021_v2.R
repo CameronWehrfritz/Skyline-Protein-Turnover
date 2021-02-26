@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: February 11, 2021
+#updated: February 26, 2021
 
 # PROTEIN TURNOVER ANALYSIS
 # STEP 2:
@@ -13,11 +13,11 @@
 # OUTPUT: 
 # i. PDF of non-linear regression plots: Percent Newly Synthesized vs. Time
 # ii. Data table of non-linear model statistics
-# iii. Average x-intercepts by cohort
+# iii. Average x-intercepts by treatment.group
 
-
+###########################
 ### Begin Script Step 2 ###
-
+###########################
 
 #------------------------------------------------------------------------------------
 # START CODE FOR RUNNING IN RSTUDIO (comment out if running from TurnoveR)
@@ -56,8 +56,8 @@ data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover
 data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Step0_Data_Output_Skyline_multileucine_peps_test.csv", stringsAsFactors = F) # PC
 #------------------------------------------------------------------------------------
 
-# reference cohort
-reference.cohort <- "OCon" # this should be assigned by the user # TO DO
+# Reference Treatment.Group
+Reference.Treatment.Group <- "OCon" # this should be assigned by the user 
 
 #------------------------------------------------------------------------------------
 # END CODE FOR RUNNING IN RSTUDIO
@@ -95,11 +95,11 @@ df <- df %>%
 #------------------------------------------------------------------------------------
 # PREP FOR MODEL
 
-# cohorts
-cohorts <- unique(df$Cohort)
+# treatment.groups
+treatment.groups <- unique(df$Treatment.Group)
 
-# make a cohort vector for looping through all comparisons
-cohorts.loop <- cohorts[!cohorts==reference.cohort] # keep all cohorts except for the reference cohort
+# make a treatment.group vector for looping through all comparisons
+treatment.groups.loop <- treatment.groups[!treatment.groups==Reference.Treatment.Group] # keep all treatment.groups except for the reference treatment.group
   
 # proteins
 prots <- unique(df$Protein.Accession)
@@ -114,10 +114,10 @@ time <- sort(unique(df$Timepoint))
 
 # initialize data frame to write out results from nonlinear model 
 # first figure out your column names since the number of columns is built off that
-# row size = (number of cohorts) * (number of proteins) ... per cohort, which is hopefully constant
+# row size = (number of treatment.groups) * (number of proteins) ... per treatment.group, which is hopefully constant
 # col size = number of names in col.names
-col.names <- c("Protein.Accession", "Gene", "Cohort", "No.Peptides", "No.Points", "a", "Pvalue.a", "b", "Pvalue.b", "Qvalue", "Res.Std.Error", "X.Intercept")
-df.model.output <- data.frame(matrix(nrow = 2*length(cohorts.loop)*length(prots), ncol = length(col.names)))
+col.names <- c("Protein.Accession", "Gene", "Treatment.Group", "No.Peptides", "No.Points", "a", "Pvalue.a", "b", "Pvalue.b", "Qvalue", "Res.Std.Error", "X.Intercept")
+df.model.output <- data.frame(matrix(nrow = 2*length(treatment.groups.loop)*length(prots), ncol = length(col.names)))
 names(df.model.output) <- col.names
 
 #Initiate PDF
@@ -128,28 +128,28 @@ row.index <- 1
 for(i in seq_along(unique(df$Protein.Accession))){
   print(i)
   
-  # subset combined data for cohort and protein 
+  # subset combined data for treatment.groups and protein 
   data.protein.loop <- subset(df, Protein.Accession == prots[i]) 
   
-  # subset reference data - do this before cohorts loop below
-  data.ref <- subset(data.protein.loop, Cohort==reference.cohort) # ref will always be the user defined reference cohort
+  # subset reference data - do this before treatment.group loop below
+  data.ref <- subset(data.protein.loop, Treatment.Group==Reference.Treatment.Group) # ref will always be the user defined reference treatment group
   # subset variables Time and Percent.Newly.Synthesized to fit with model
   fit.ref <- subset(data.ref, select = c("Timepoint", "Perc.New.Synth")) %>% 
     dplyr::rename(x=Timepoint, y=Perc.New.Synth) %>% # rename to x and y for simiplicity in model
     dplyr::arrange(x) # ascending order by time.point
   
-  # loop through cohorts 
-  for(j in cohorts.loop){
+  # loop through treatment.groups 
+  for(j in treatment.groups.loop){
     
-    # subset variable cohort data
-    data.var <- subset(data.protein.loop, Cohort==j)
+    # subset variable treatment.groups data
+    data.var <- subset(data.protein.loop, Treatment.Group==j)
     
     # subset variables Time and Percent.Newly.Synthesized to fit with model
     fit.var <- subset(data.var, select = c("Timepoint", "Perc.New.Synth")) %>%
       dplyr::rename(x=Timepoint, y=Perc.New.Synth) %>% # rename to x and y for simiplicity in model
       dplyr::arrange(x) # ascending order by time.point
     
-    if( nrow(fit.ref)>length(time) & nrow(fit.var)>length(time) ){ # quick assessment: if the number of data points for each cohort is greater than length of time points then the model should hopefully converge
+    if( nrow(fit.ref)>length(time) & nrow(fit.var)>length(time) ){ # quick assessment: if the number of data points for each treatment.group is greater than length of time points then the model should hopefully converge
       tryCatch(
         expr={
           # MODEL:
@@ -168,15 +168,15 @@ for(i in seq_along(unique(df$Protein.Accession))){
           
           # write out model results 
           
-          # REFERENCE COHORT:
+          # REFERENCE TREATMENT GROUP:
           # protein
           df.model.output[row.index, "Protein.Accession"] <- prots[i]
 
           # gene
           df.model.output[row.index, "Gene"] <- data.ref %>% pull(Protein.Gene) %>% unique()
 
-          # cohort
-          df.model.output[row.index, "Cohort"] <- data.ref %>% pull(Cohort) %>% unique()
+          # treatment.group
+          df.model.output[row.index, "Treatment.Group"] <- data.ref %>% pull(Treatment.Group) %>% unique()
 
           # number of unique peptides
           df.model.output[row.index, "No.Peptides"] <- data.ref %>% pull(Modified.Peptide.Seq) %>% unique() %>% length()
@@ -203,15 +203,15 @@ for(i in seq_along(unique(df$Protein.Accession))){
           df.model.output[row.index, "X.Intercept"] <- (1/summary(m.ref)$coef["b", "Estimate"])*log(1/summary(m.ref)$coef["a", "Estimate"]) # x intercept: x=ln(1/a)*b
           
           
-          # VARIABLE COHORT:
+          # VARIABLE TREATMENT GROUP:
           # protein
           df.model.output[row.index+1, "Protein.Accession"] <- prots[i]
           
           # gene
           df.model.output[row.index+1, "Gene"] <- data.var %>% pull(Protein.Gene) %>% unique()
           
-          # cohort
-          df.model.output[row.index+1, "Cohort"] <- data.var %>% pull(Cohort) %>% unique()
+          # treatment.group
+          df.model.output[row.index+1, "Treatment.Group"] <- data.var %>% pull(Treatment.Group) %>% unique()
           
           # number of unique peptides
           df.model.output[row.index+1, "No.Peptides"] <- data.var %>% pull(Modified.Peptide.Seq) %>% unique() %>% length()
@@ -239,17 +239,17 @@ for(i in seq_along(unique(df$Protein.Accession))){
           
           
           # PLOT
-          color.ref <- "blue" # set reference cohort color to blue
-          color.var <- "red" # set variable cohort color to red
+          color.ref <- "blue" # set reference treatment.group color to blue
+          color.var <- "red" # set variable treatment.group color to red
           # plot (x,y) data points
           plot(fit.ref, xlab = "Time (Days)", ylab = "Percent Newly Synthesized", xlim = c(0, max(time)), ylim = c(0,1), main=paste(unique(data.var[, "Protein.Accession"]), unique(data.var[, "Protein.Gene"])), pch=2, col=color.ref) # blue triangles
-          points(fit.var, pch=1, col=color.var) # variable cohort data points are red circles
+          points(fit.var, pch=1, col=color.var) # variable treatment.group data points are red circles
           # plot model curves
           xg <- seq(from = 0, to = max(time), length = 3*max(time)) # create vector of inputs for predict function to use for graphing below - used for generating model curves
-          lines(xg, predict(m.ref, list(x = xg)), col = color.ref) # reference cohort model is blue curve
-          lines(xg, predict(m.var, list(x = xg)), col = color.var) # variable cohort model is red curve
+          lines(xg, predict(m.ref, list(x = xg)), col = color.ref) # reference treatment.group model is blue curve
+          lines(xg, predict(m.var, list(x = xg)), col = color.var) # variable treatment.group model is red curve
           # legend
-          legend("top", inset = 0.01, legend = c(unique(data.ref[, "Cohort"]), unique(data.var[, "Cohort"])), ncol = 2, cex = 0.8, lty = 1, col = c(color.ref, color.var)) # these legends look good on a matrix plot (2 rows by 3 columns) PDF
+          legend("top", inset = 0.01, legend = c(unique(data.ref[, "Treatment.Group"]), unique(data.var[, "Treatment.Group"])), ncol = 2, cex = 0.8, lty = 1, col = c(color.ref, color.var)) # these legends look good on a matrix plot (2 rows by 3 columns) PDF
         },
         error=function(e){
           message("Caught an error!")
@@ -268,43 +268,43 @@ for(i in seq_along(unique(df$Protein.Accession))){
       
       # Write out basic information from the loop - even though it was not modeled:
       
-      # Reference cohort:
+      # Reference treatment.group:
       # protein
       df.model.output[row.index, "Protein.Accession"] <- prots[i] # protein
       
       # gene
       df.model.output[row.index, "Gene"] <- ifelse(length(unique(data.ref[, "Protein.Gene"]))==0, NA, unique(data.ref[, "Protein.Gene"])) # gene
       
-      # cohort
-      df.model.output[ row.index, "Cohort"] <- ifelse(length(unique(data.ref[, "Cohort"]))==0, NA, unique(data.ref[, "Cohort"])) # reference cohort
+      # treatment.group
+      df.model.output[ row.index, "Treatment.Group"] <- ifelse(length(unique(data.ref[, "Treatment.Group"]))==0, NA, unique(data.ref[, "Treatment.Group"])) # reference treatment.group
       
       # number of peptides
-      df.model.output[row.index, "No.Peptides"] <- ifelse(length(unique(data.ref[, "Cohort"]))==0, NA, length(unique(data.ref$Modified.Peptide.Seq))) # number of peptides in reference cohort
+      df.model.output[row.index, "No.Peptides"] <- ifelse(length(unique(data.ref[, "Treatment.Group"]))==0, NA, length(unique(data.ref$Modified.Peptide.Seq))) # number of peptides in reference treatment.group
       
       # number of points
-      df.model.output[row.index, "No.Points"] <- ifelse(length(unique(data.ref[, "Cohort"]))==0, NA, no.points.a) # number of points reference cohort
+      df.model.output[row.index, "No.Points"] <- ifelse(length(unique(data.ref[, "Treatment.Group"]))==0, NA, no.points.a) # number of points reference treatment.group
       
       
-      # Variable cohort:
+      # Variable treatment.group:
       # protein
       df.model.output[row.index +1, "Protein.Accession"] <- prots[i] # Protein
       
       # gene
       df.model.output[row.index +1, "Gene"] <- ifelse(length(unique(data.var[, "Protein.Gene"]))==0, NA, unique(data.var[, "Protein.Gene"])) # gene
       
-      # cohort
-      df.model.output[ row.index +1, "Cohort"] <- ifelse(length(unique(data.var[, "Cohort"]))==0, NA, unique(data.var[, "Cohort"])) # variable cohort
+      # treatment.group
+      df.model.output[ row.index +1, "Treatment.Group"] <- ifelse(length(unique(data.var[, "Treatment.Group"]))==0, NA, unique(data.var[, "Treatment.Group"])) # variable treatment.group
       
       # number of peptides
-      df.model.output[row.index +1, "No.Peptides"] <- ifelse(length(unique(data.var[, "Cohort"]))==0, NA, length(unique(data.var$Modified.Peptide.Seq))) # number of Modified.Peptide.Seq in variable cohort
+      df.model.output[row.index +1, "No.Peptides"] <- ifelse(length(unique(data.var[, "Treatment.Group"]))==0, NA, length(unique(data.var$Modified.Peptide.Seq))) # number of Modified.Peptide.Seq in variable treatment.group
       
       # number of points
-      df.model.output[row.index +1, "No.Points"] <-  ifelse(length(unique(data.var[, "Cohort"]))==0, NA, no.points.b) # number of points in variable cohort
+      df.model.output[row.index +1, "No.Points"] <-  ifelse(length(unique(data.var[, "Treatment.Group"]))==0, NA, no.points.b) # number of points in variable treatment.group
       
     } # end trycatch
-    # increase row.index counter by 2 each cycle, since we are writing out data for two cohorts during each iteration of j through cohorts.loop
+    # increase row.index counter by 2 each cycle, since we are writing out data for two treatment.groups during each iteration of j through treatment.groups.loop
     row.index <- row.index + 2
-  } # end for; cohort level
+  } # end for; treatment.group level
 } # end for; protein level
 
 graphics.off()
@@ -325,7 +325,7 @@ df.model.output <- df.model.output %>%
 
 df.model.output <- df.model.output %>%
   na.omit() %>% # drop rows with NA
-  unique() # get rid of duplicated rows from modeling the reference cohort multiple times
+  unique() # get rid of duplicated rows from modeling the reference treatment.group multiple times
   
 write.csv(df.model.output, file = "Table_step2_output_date.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
@@ -346,9 +346,9 @@ write.csv(df.model.output.filtered, file = "Table_step2_output_filtered_date.csv
 
 
 #------------------------------------------------------------------------------------
-# Calculate median x-intercepts for each cohort group
+# Calculate median x-intercepts for each treatment.group group
 df.x.int.medians <- df.model.output %>%
-  dplyr::group_by(Cohort) %>%
+  dplyr::group_by(Treatment.Group) %>%
   dplyr::summarise(Median.x.intercept=median(X.Intercept))
 
 # write out median
