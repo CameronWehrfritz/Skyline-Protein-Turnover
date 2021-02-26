@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: January 28, 2021
+#updated: February 26, 2021
 
 
 # PROTEIN TURNOVER ANALYSIS
@@ -15,9 +15,9 @@
 
 # OUTPUT: DATA TABLES AND PDFs OF PLOTS
 
-######################
-#### Begin Program ###
-######################
+####################
+### Begin Script ###
+####################
 
 
 
@@ -28,8 +28,8 @@
 
 #------------------------------------------------------------------------------------
 #set working directory
-setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN mac
-# setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # VPN windows
+# setwd("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # MAC
+setwd("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts") # PC
 #------------------------------------------------------------------------------------
 
 
@@ -53,8 +53,8 @@ package.check <- lapply(packages, FUN = function(x) {
 # test data: 2020_0529_rablab_cr_ctl_4prots.csv
 # change directory as necessary
 
-df.input <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN mac
-# df.input <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) #VPN windows
+# df.input <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) # MAC
+df.input <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) # PC
 #------------------------------------------------------------------------------------
 
 
@@ -65,21 +65,22 @@ df.input <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnove
 min.abundance <- 10**(-5) # minimum abundance
 resolution <- 0.1 # resolution for distinguishing peaks
 p.tolerance <- 0.05 # tolerance for combining masses in observed data
-Detection.Qvalue.threshold <- 1 # value for filtering on Detection.Qvalue where 0 is the most stringent and 1 is least stringent
 
 # diet enrichment
 diet.enrichment <- 99.9999 # percent enrichment of heavy Leucine in diet - Update to user specified value
 # if user specifies diet.enrichment of 100%, change to 99.9999% (since 100% will not work in FBC step)
 diet.enrichment <- ifelse(diet.enrichment==100, 99.9999, diet.enrichment)
 diet.enrichment <- diet.enrichment/100 # transform percent diet enrichment from 0-100 % to 0.0 - 1.0
+
+# Qvalue
+Detection.Qvalue.threshold <- as.numeric("0.1") # should be specified by user, on the interval (0,1]
+Filter.Q.Values <- TRUE # does the user want to filter by Qvalues? # TRUE or FALSE
 #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
 # END CODE FOR RUNNING IN RSTUDIO
 #------------------------------------------------------------------------------------
-
-
 
 
 #------------------------------------------------------------------------------------
@@ -89,21 +90,34 @@ df <- df.input %>%
   filter(Is.Decoy == "False") %>% # filter out Decoys (which are used for training algorithm in Skyline)
   filter(!Protein=="Biognosys|iRT-Kit_WR_fusion") %>% # filter out Biognosys rows, since these are spiked in to the sample for Quality Control
   filter(! Fragment.Ion=="precursor [M-1]") %>% # filter out [M-1] precursor observations (since these cause an issue with building Matrix A in the FBC step)
-  mutate_at(vars(Timepoint), list(~as.numeric(.))) %>% # convert Timepoint variable to numeric
-  mutate_at(vars(Detection.Q.Value), list(~as.numeric(.))) %>% # convert Detection.Q.Value variable to numeric
-  mutate_at(vars(Detection.Q.Value), list(~ifelse(is.na(.), 0.00123, .))) %>% # FOR TESTING PURPOSES ONLY -- if Qvalue is missing replace NA with value=0.00123 -- TO BE REMOVED IN OFFICIAL TOOL -- FOR TESTING PURPOSES ONLY
-  filter(!is.na(Detection.Q.Value)) # filter out observations which do not have numerical Detection.Q.Value
+  mutate_at(vars(Timepoint), list(~as.numeric(.)))  # convert Timepoint variable to numeric
 #------------------------------------------------------------------------------------
 
 
-
-# # need updated test data set with numerical Qvalues before using this chunk
 #------------------------------------------------------------------------------------
 # Detection Qvalue Filter
-# Detection.Qvalue.threshold can be between [0,1) where smaller values are more stringent
-# The default should be 1, corresponding to no filter, thereby retaining all of the data
-df <- df %>%
-  filter(Detection.Q.Value < Detection.Qvalue.threshold)
+# only runs if the user has enabled the Qvalue filter
+
+# define function
+Qvalue.mutate.function <- function(x){
+  x <- as.numeric(x) # force to numeric
+  x.out <- ifelse(x<Detection.Qvalue.threshold, x, NA) # change values to NA which are larger than Detection.Qvalue.threshold
+}
+
+# only runs if the user has enabled the Qvalue filter
+if(Filter.Q.Values==1){
+  if(Detection.Qvalue.threshold<1){ # if the user specified Detection.Qvalue.threshold is less than 1
+    # apply the mutation-function, and filter out data with missing Qvalues
+    df <- df %>%
+      mutate(Detection.Q.Value = map_dbl(Detection.Q.Value, Qvalue.mutate.function)) %>% # apply Qvalue mutate function
+      filter(!is.na(Detection.Q.Value)) # filter out data with missing Qvalues
+  }
+  if(Detection.Qvalue.threshold==1){ # if the user specified Detection.Qvalue.threshold is equal to 1
+    # apply the mutation-function, but DO NOT filter out data with missing Qvalues
+    df <- df %>%
+      mutate(Detection.Q.Value = map_dbl(Detection.Q.Value, Qvalue.mutate.function))
+  }
+}
 #------------------------------------------------------------------------------------
 
 
@@ -582,7 +596,7 @@ df <- df %>%
 
 # Move most important columns to the left of the data frame, and keep all other columns on the right
 df <- df %>%
-  select(Protein.Accession, Protein.Gene, Peptide, Modified.Peptide.Seq, Replicate.Name, Condition, Timepoint, Number.Heavy.Leucines, Area, everything()) # NO COHORT - removed cohort from below on 7/24/2020 before first test run ~4:15pm
+  select(Protein.Accession, Protein.Gene, Peptide, Modified.Peptide.Seq, Replicate.Name, Treatment.Group, Timepoint, Number.Heavy.Leucines, Area, everything()) # NO COHORT - removed cohort from below on 7/24/2020 before first test run ~4:15pm
 #------------------------------------------------------------------------------------
 
 
@@ -609,7 +623,7 @@ df.solutions <- data.frame(matrix(NA,
                                   ncol=13))
 
 # name columns
-names(df.solutions)[1:13] <- c("Protein.Gene", "Protein.Accession", "Peptide", "Modified.Peptide", "Replicate.Name", "Condition",
+names(df.solutions)[1:13] <- c("Protein.Gene", "Protein.Accession", "Peptide", "Modified.Peptide", "Replicate.Name", "Treatment.Group",
                                "Timepoint", "Product.Charge", "Number.Heavy.Leucines", "Detection.Q.Value", "Total.Area.MS1", 
                                "Isotope.Dot.Product", "FBC.Solution")
 
@@ -798,8 +812,8 @@ for(k in seq_along(proteins)){
               df.solutions[rows.write.out, "Peptide"] <- unique(df.charge$Peptide)
               # modified.peptide
               df.solutions[rows.write.out, "Modified.Peptide"] <- unique(df.charge$Modified.Peptide.Seq)
-              # Condition
-              df.solutions[rows.write.out, "Condition"] <- unique(df.charge$Condition)
+              # Treatment.Group
+              df.solutions[rows.write.out, "Treatment.Group"] <- unique(df.charge$Treatment.Group)
               # Timepoint
               df.solutions[rows.write.out, "Timepoint"] <- as.numeric(unique(df.charge$Timepoint))
               # Product.Charge
@@ -807,7 +821,7 @@ for(k in seq_along(proteins)){
               # Number Heavy Leucines
               df.solutions[rows.write.out, "Number.Heavy.Leucines"] <- as.numeric(unique(df.charge$Number.Heavy.Leucines))
               # Detection Qvalue
-              df.solutions[rows.write.out, "Detection.Q.Value"] <- as.numeric(unique(df.charge$Detection.Q.Value)) ### is this right? example data set has #N/A entries...check with good values
+              df.solutions[rows.write.out, "Detection.Q.Value"] <- as.numeric(unique(df.charge$Detection.Q.Value))
               # Total Area MS1
               df.solutions[rows.write.out, "Total.Area.MS1"] <- as.numeric(unique(df.charge$Total.Area.MS1))
               # Isotope.Dot.Product - individual IDP values; one unique per peptide by Number of Heavy Leucines
@@ -843,8 +857,8 @@ for(k in seq_along(proteins)){
               df.solutions[rows.write.out, "Peptide"] <- unique(df.charge$Peptide)
               # modified.peptide
               df.solutions[rows.write.out, "Modified.Peptide"] <- unique(df.charge$Modified.Peptide.Seq)
-              # Condition
-              df.solutions[rows.write.out, "Condition"] <- unique(df.charge$Condition)
+              # Treatment.Group
+              df.solutions[rows.write.out, "Treatment.Group"] <- unique(df.charge$Treatment.Group)
               # Timepoint
               df.solutions[rows.write.out, "Timepoint"] <- as.numeric(unique(df.charge$Timepoint))
               # Product.Charge
@@ -852,7 +866,7 @@ for(k in seq_along(proteins)){
               # Number Heavy Leucines
               df.solutions[rows.write.out, "Number.Heavy.Leucines"] <- as.numeric(unique(df.charge$Number.Heavy.Leucines))
               # Detection Qvalue
-              df.solutions[rows.write.out, "Detection.Q.Value"] <- as.numeric(unique(df.charge$Detection.Q.Value)) ### is this right? example data set has #N/A entries...check with good values
+              df.solutions[rows.write.out, "Detection.Q.Value"] <- as.numeric(unique(df.charge$Detection.Q.Value))
               # Total Area MS1
               df.solutions[rows.write.out, "Total.Area.MS1"] <- as.numeric(unique(df.charge$Total.Area.MS1))
               # Isotope.Dot.Product - individual IDP values; one unique per peptide by Number of Heavy Leucines
@@ -893,8 +907,8 @@ for(k in seq_along(proteins)){
         df.solutions[rows.write.out, "Peptide"] <- unique(df.mod.peptide$Peptide)
         # modified.peptide
         df.solutions[rows.write.out, "Modified.Peptide"] <- unique(df.mod.peptide$Modified.Peptide.Seq)
-        # Condition
-        df.solutions[rows.write.out, "Condition"] <- unique(df.mod.peptide$Condition)[1] # take just the first element in case there are multiple values
+        # Treatment.Group
+        df.solutions[rows.write.out, "Treatment.Group"] <- unique(df.mod.peptide$Treatment.Group)[1] # take just the first element in case there are multiple values
         # Timepoint
         df.solutions[rows.write.out, "Timepoint"] <- as.numeric(unique(df.mod.peptide$Timepoint))[1] # take just the first element in case there are multiple values
         # Product.Charge
@@ -945,10 +959,9 @@ df.solutions <- df.solutions %>%
 # clean up df.solutions - for successive R scripts
 df.solutions <- df.solutions %>%
   dplyr::filter(Number.Heavy.Leucines<5) %>% # keep rows with at most 4 heavy leucines
-  dplyr::rename(Cohort=Condition) %>% # rename Condition to Cohort, this matches the nomenclature of the successive R scripts
   dplyr::rename(Modified.Peptide.Seq=Modified.Peptide) %>% # adjust this name for future steps
-  dplyr::mutate(Condition=paste0(Cohort, "_D", Timepoint)) %>% # create new Condition column, by merging cohort with timepoint and including "D" for day
-  dplyr::mutate(Total.Replicate.Name=paste0(Condition, "_", Replicate.Name)) %>% # create new Total.Replicate.Name column
+  dplyr::mutate(Condition=paste0(Treatment.Group, "_D", Timepoint)) %>% # create new Condition column, by merging Treatment.Group with timepoint and including "D" for day
+  dplyr::mutate(Total.Replicate.Name=paste0(Treatment.Group, "_", Replicate.Name)) %>% # create new Total.Replicate.Name column
   dplyr::mutate(Area.Number.Heavy.Leucines=paste0("Area", Number.Heavy.Leucines)) %>% # create new column for casting to wide format later
   dplyr::mutate(FBC.Solution=ifelse(FBC.Solution<0, 0, ifelse(FBC.Solution>1, 1, FBC.Solution))) # FBC solution must be [0,1]: negative values are changed to 0, greater than 1 are changed to 1
 
@@ -979,7 +992,7 @@ df.solutions.filtered <- df.solutions %>%
 # Rearrange variables in df.solutions.filtered
 # and write out this filtered version
 df.solutions.filtered <- df.solutions.filtered %>%
-  select(Protein.Gene, Protein.Accession, Peptide, Modified.Peptide.Seq, Total.Replicate.Name, Condition, Cohort, 
+  select(Protein.Gene, Protein.Accession, Peptide, Modified.Peptide.Seq, Total.Replicate.Name, Condition, Treatment.Group, 
          Replicate.Name, Timepoint, Product.Charge, Number.Heavy.Leucines, Area.Number.Heavy.Leucines, 
          everything()) # all other variables
 
@@ -990,7 +1003,7 @@ write.csv(df.solutions.filtered, file="df_solutions_filtered_date.csv", row.name
 
 #------------------------------------------------------------------------------------
 # Create Area data frame with FBC solutions cast in wide format for each peptide
-df.areas.charge <- dcast(data = df.solutions.filtered, formula = Protein.Accession + Protein.Gene + Replicate.Name + Total.Replicate.Name + Cohort + Condition + Timepoint + Modified.Peptide.Seq + Product.Charge ~ Area.Number.Heavy.Leucines , value.var=c("FBC.Solution")) %>% # wide format cast
+df.areas.charge <- dcast(data = df.solutions.filtered, formula = Protein.Accession + Protein.Gene + Replicate.Name + Total.Replicate.Name + Treatment.Group + Condition + Timepoint + Modified.Peptide.Seq + Product.Charge ~ Area.Number.Heavy.Leucines , value.var=c("FBC.Solution")) %>% # wide format cast
   mutate("Number.Leucine"= map_dbl(Modified.Peptide.Seq, leucine.count.fun)) %>% # add Number of Leucine column
   filter(!is.na(Area0)) %>% # keep only rows with a non-NA Area0
   mutate(Percent.Label = rowSums(select(., all_of(heavy.label.areas)), na.rm=TRUE)/rowSums(select(., contains("Area")), na.rm=TRUE)) # create new column `Percent.Label`=Label Area/Total Area
@@ -1294,11 +1307,11 @@ write.csv(df.areas.one.l , "Step1_Data_Output_Skyline_singleleucine_peps_date.cs
 # PLOTS
 
 
-###
+##
 # first relevel factors for Condition variable, for the data frames which we will use to plot data:
 
-# unique cohorts
-cohorts <- unique(df.precursor.pool$Cohort)
+# unique Treatment.Groups
+treatment.groups <- unique(df.precursor.pool$Treatment.Group)
 
 # unique timepoints - in ascending order
 timepoints <- df.precursor.pool %>%
@@ -1307,9 +1320,9 @@ timepoints <- df.precursor.pool %>%
   unique()
 
 conditions.relevel <- c() # initialize vector
-# loop through timepoints, creating conditions.relevel vector with all cohorts along the way
+# loop through timepoints, creating conditions.relevel vector with all conditions
 for(i in timepoints){
-  conditions.relevel <- append(conditions.relevel, paste0(cohorts, sep="_D", i))
+  conditions.relevel <- append(conditions.relevel, paste0(treatment.groups, sep="_D", i))
 }
 
 # relevel Condition variable in these three data frames:
@@ -1322,7 +1335,7 @@ df.precursor.pool <- df.precursor.pool %>%
 
 df.areas.one.l <- df.areas.one.l %>%
   mutate(Condition = fct_relevel(Condition, conditions.relevel))
-###
+##
 
 
 # Plots:
@@ -1503,7 +1516,6 @@ df.pp.ats.filtered <- df.precursor.pool %>%
   filter(Avg.Turnover.Score>ATS.threshold) 
 
 density.percnew <- df.pp.ats.filtered %>%
-  # mutate(Condition = fct_relevel(Condition, "OCon_D3", "OCR_D3", "OCon_D7", "OCR_D7", "OCon_D12", "OCR_D12", "OCon_D17", "OCR_D17")) %>%
   mutate(Condition = fct_relevel(Condition, conditions.relevel)) %>%
   ggplot(aes(x=Perc.New.Synth, fill=Condition)) + 
   geom_histogram(aes(y=..density..), alpha=0.2, col="black", position='identity') +
