@@ -21,7 +21,7 @@ diet.enrichment <- as.numeric ("0.999999") # Leucine percent enrichment in diet
 min.avg.turnover.score <<- as.numeric ("0")
 min.isotope.dot.product <<- as.numeric ("0")
 folder.name <- "Data"
-Treatment.Group <- "OCR"
+Reference.Treatment.Group <- "OCR"
 Detection.Qvalue.threshold <- as.numeric ("1")
 Filter.Q.Values <- TRUE
 
@@ -65,7 +65,7 @@ setwd("C:/Users/alimarsh/Documents/Turnover/Data")
 #   if (i==4) min.avg.turnover.score <<- as.numeric (arg)
 #   if (i==5) min.isotope.dot.product <<- as.numeric (arg)
 #   if (i==6) folder.name <- arg
-#   if (i==7) Treatment.Group <- arg
+#   if (i==7) Reference.Treatment.Group <- arg
 #   if (i==8) Detection.Qvalue.threshold <- as.numeric (arg)
 #   if (i==9) Filter.Q.Values <- ifelse(arg=="1", TRUE, FALSE)
 # }
@@ -105,7 +105,7 @@ if (is.null(df.input$Replicate.Name)) {
   # rename df columns with periods between words
   df.input <- rename_with(df.input, .fn = function(vector){
     return(c("Protein", "Replicate.Name", "Protein.Description", "Protein.Accession", "Protein.Gene", "Peptide", 
-             "File.Name", "Timepoint", "Condition", "Precursor.Charge", "Precursor.Mz", "Molecule.Formula", 
+             "File.Name", "Timepoint", "Treatment.Group", "Precursor.Charge", "Precursor.Mz", "Molecule.Formula", 
              "Precursor.Neutral.Mass", "Modified.Sequence", "Is.Decoy", "Detection.Q.Value", "Total.Area.MS1", 
              "Isotope.Dot.Product", "Product.Mz", "Product.Charge", "Fragment.Ion", "Isotope.Dist.Index", 
              "Isotope.Dist.Rank", "Isotope.Dist.Proportion", "Fragment.Ion.Type", "Area"))
