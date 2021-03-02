@@ -50,11 +50,11 @@ package.check <- lapply(packages, FUN = function(x) {
 #------------------------------------------------------------------------------------
 # LOAD DATA #
 
-# test data: 2020_0529_rablab_cr_ctl_4prots.csv
+# tutorial dataset: 2021_0226_Protein_Turnover_Report_v1.csv
 # change directory as necessary
 
-# df.input <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) # MAC
-df.input <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Practice_Input_Data/2020_0529_rablab_cr_ctl_4prots.csv", stringsAsFactors = F) # PC
+# df.input <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Tutorial_Input_Data/2021_0226_Protein_Turnover_Report_v1.csv", stringsAsFactors = F) # MAC
+df.input <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Tutorial_Input_Data/2021_0226_Protein_Turnover_Report_v1.csv", stringsAsFactors = F) # PC
 #------------------------------------------------------------------------------------
 
 
@@ -87,7 +87,7 @@ Filter.Q.Values <- TRUE # does the user want to filter by Qvalues? # TRUE or FAL
 # Preliminary Filters and Cleaning:
 
 df <- df.input %>%
-  filter(Is.Decoy == "False") %>% # filter out Decoys (which are used for training algorithm in Skyline)
+  filter(Is.Decoy == FALSE) %>% # filter out Decoys (which are used for training algorithm in Skyline)
   filter(!Protein=="Biognosys|iRT-Kit_WR_fusion") %>% # filter out Biognosys rows, since these are spiked in to the sample for Quality Control
   filter(! Fragment.Ion=="precursor [M-1]") %>% # filter out [M-1] precursor observations (since these cause an issue with building Matrix A in the FBC step)
   mutate_at(vars(Timepoint), list(~as.numeric(.)))  # convert Timepoint variable to numeric
