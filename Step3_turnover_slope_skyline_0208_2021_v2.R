@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: February 26, 2021
+#updated: March 2, 2021
 
 # PROTEIN TURNOVER ANALYSIS
 # STEP 3:
@@ -327,7 +327,7 @@ df.model.output <- df.model.output %>%
 
 #------------------------------------------------------------------------------------
 # write out model output
-write.csv(df.model.output, file = "Table_step3_output.csv", row.names = FALSE)
+write.csv(df.model.output, file = "Regressions_origin.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
@@ -339,7 +339,7 @@ df.model.output.filtered <- df.model.output %>%
   filter(b<0 & Pvalue.b<0.05)
 
 # write out filtered df
-write.csv(df.model.output.filtered, "Table_step3_output_filtered.csv", row.names = FALSE)
+write.csv(df.model.output.filtered, "Regressions_origin_filtered.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 

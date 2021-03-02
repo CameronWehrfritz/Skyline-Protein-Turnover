@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: February 26, 2021
+#updated: March 2, 2021
 
 
 # PROTEIN TURNOVER ANALYSIS
@@ -1504,13 +1504,23 @@ ggsave("Scatterplot_Percent-Newly-Synthesized_vs_Avg-Turnover-Score.pdf",
 #------------------------------------------------------------------------------------
 # Average Turnover Score Filter
 
-# first see the histogram of Average Turnover Score
-hist(df.precursor.pool$Avg.Turnover.Score, breaks=100, main="Average Turnover Score", xlab="Average Turnover Score")
+histogram.avg.turnover.score <- df.precursor.pool %>%
+  ggplot(aes(x=Avg.Turnover.Score)) +
+  geom_histogram(breaks=seq(0, 1, by=0.01), col="black", fill="grey", alpha=0.7) +
+  labs(title="Average Turnover Score (for peptides with multiple leucines)", x="Average Turnover Score", y="Frequency") +
+  theme_bw()
+
+# save plot
+ggsave("Histogram_Average-Turnover-Score.pdf",
+       plot = histogram.avg.turnover.score,
+       width = 7, height = 5,
+       units = "in", # inches
+       dpi = 300)
 
 # average turnover score filter
 # between [0,1) where 1 is most stringent
 # the default should be 0
-ATS.threshold <- 0.70 # average turnover score value, 70% is a typically a good starting place
+ATS.threshold <- 0.70 # average turnover score value, 70% may be a good value to start
 
 df.pp.ats.filtered <- df.precursor.pool %>%
   filter(Avg.Turnover.Score>ATS.threshold) 

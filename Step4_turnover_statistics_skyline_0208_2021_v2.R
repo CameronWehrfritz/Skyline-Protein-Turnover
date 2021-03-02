@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: February 26, 2021
+#updated: March 2, 2021
 
 # PROTEIN TURNOVER ANALYSIS
 # STEP 4:
@@ -135,7 +135,7 @@ for(i in prots){
     data.var <- subset(data.protein.loop, Treatment.Group==j) # var refers to the variable treatment.groups, which to compare against the user defined reference treatment.group
     
     # create name of comparison
-    comparison <- paste(j, "vs", Reference.Treatment.Group, sep=" ") # variable treatment.group vs reference treatment.group
+    comparison <- paste(j, "/", Reference.Treatment.Group, sep="") # variable treatment.group vs reference treatment.group
   
     # write out comparison name
     df.model.output[row.index, colnames(df.model.output)=="Comparison"] <- comparison
@@ -202,6 +202,14 @@ for(i in prots){
 
 
 #------------------------------------------------------------------------------------
+# final calculations
+df.model.output <- df.model.output %>%
+  mutate(Log2.Ratio.Half.Life=log2(Half.Life.Numerator/Half.Life.Denominator)) %>% # calculate log2.ratio of half lives
+  mutate(Adj.Pvalue=p.adjust(Unadj.P, method="BH")) # calculate adjusted pvalues using Benjamini & Hochberg (1995) "BH" method
+#------------------------------------------------------------------------------------
+
+
+#------------------------------------------------------------------------------------
 # clean model output
 df.model.output <- df.model.output %>%
   select(-Qvalue) %>%  # Qvalue package is not working, remove Qvalue variable
@@ -211,7 +219,7 @@ df.model.output <- df.model.output %>%
 
 #------------------------------------------------------------------------------------
 # write out model output
-write.csv(df.model.output, file = "Table_step4_output_date.csv", row.names = FALSE)
+write.csv(df.model.output, file = "Half-lives_statistics.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 

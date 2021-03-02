@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: February 26, 2021
+#updated: March 2, 2021
 
 # PROTEIN TURNOVER ANALYSIS
 # STEP 2:
@@ -327,7 +327,7 @@ df.model.output <- df.model.output %>%
   na.omit() %>% # drop rows with NA
   unique() # get rid of duplicated rows from modeling the reference treatment.group multiple times
   
-write.csv(df.model.output, file = "Table_step2_output_date.csv", row.names = FALSE)
+write.csv(df.model.output, file = "Regressions_custom.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
@@ -341,7 +341,7 @@ df.model.output.filtered <- df.model.output %>%
   filter(b<0 &  X.Intercept<min(time) & X.Intercept>0 & Pvalue.a<0.05 & Pvalue.b<0.05)
 
 # write out filtered output
-write.csv(df.model.output.filtered, file = "Table_step2_output_filtered_date.csv", row.names = FALSE)
+write.csv(df.model.output.filtered, file = "Regressions_custom_filtered.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
