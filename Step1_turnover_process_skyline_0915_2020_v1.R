@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: March 2, 2021
+#updated: March 12, 2021
 
 
 # PROTEIN TURNOVER ANALYSIS
@@ -46,6 +46,11 @@ package.check <- lapply(packages, FUN = function(x) {
 })
 #------------------------------------------------------------------------------------
 
+#------------------------------------------------------------------------------------
+# Create subfolder for storing many output files
+dir.create("Additional_Output_Data") # some output files are written out here, while the most important ones are written out to the working directory 
+#------------------------------------------------------------------------------------
+
 
 #------------------------------------------------------------------------------------
 # LOAD DATA #
@@ -53,8 +58,7 @@ package.check <- lapply(packages, FUN = function(x) {
 # tutorial dataset: 2021_0226_Protein_Turnover_Report_v1.csv
 # change directory as necessary
 
-# df.input <- read.csv("/Volumes/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Tutorial_Input_Data/2021_0226_Protein_Turnover_Report_v1.csv", stringsAsFactors = F) # MAC
-df.input <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Tutorial_Input_Data/2021_0226_Protein_Turnover_Report_v1.csv", stringsAsFactors = F) # PC
+df.input <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Tutorial_Input_Data/2021_0226_Protein_Turnover_Report_v1.csv", stringsAsFactors = F)
 #------------------------------------------------------------------------------------
 
 
@@ -596,7 +600,7 @@ df <- df %>%
 
 # Move most important columns to the left of the data frame, and keep all other columns on the right
 df <- df %>%
-  select(Protein.Accession, Protein.Gene, Peptide, Modified.Peptide.Seq, Replicate.Name, Treatment.Group, Timepoint, Number.Heavy.Leucines, Area, everything()) # NO COHORT - removed cohort from below on 7/24/2020 before first test run ~4:15pm
+  select(Protein.Accession, Protein.Gene, Peptide, Modified.Peptide.Seq, Replicate.Name, Condition, Timepoint, Number.Heavy.Leucines, Area, everything()) # NO COHORT - removed cohort from below on 7/24/2020 before first test run ~4:15pm
 #------------------------------------------------------------------------------------
 
 
@@ -623,7 +627,7 @@ df.solutions <- data.frame(matrix(NA,
                                   ncol=13))
 
 # name columns
-names(df.solutions)[1:13] <- c("Protein.Gene", "Protein.Accession", "Peptide", "Modified.Peptide", "Replicate.Name", "Treatment.Group",
+names(df.solutions)[1:13] <- c("Protein.Gene", "Protein.Accession", "Peptide", "Modified.Peptide", "Replicate.Name", "Condition",
                                "Timepoint", "Product.Charge", "Number.Heavy.Leucines", "Detection.Q.Value", "Total.Area.MS1", 
                                "Isotope.Dot.Product", "FBC.Solution")
 
@@ -812,8 +816,8 @@ for(k in seq_along(proteins)){
               df.solutions[rows.write.out, "Peptide"] <- unique(df.charge$Peptide)
               # modified.peptide
               df.solutions[rows.write.out, "Modified.Peptide"] <- unique(df.charge$Modified.Peptide.Seq)
-              # Treatment.Group
-              df.solutions[rows.write.out, "Treatment.Group"] <- unique(df.charge$Treatment.Group)
+              # Condition
+              df.solutions[rows.write.out, "Condition"] <- unique(df.charge$Condition)
               # Timepoint
               df.solutions[rows.write.out, "Timepoint"] <- as.numeric(unique(df.charge$Timepoint))
               # Product.Charge
@@ -857,8 +861,8 @@ for(k in seq_along(proteins)){
               df.solutions[rows.write.out, "Peptide"] <- unique(df.charge$Peptide)
               # modified.peptide
               df.solutions[rows.write.out, "Modified.Peptide"] <- unique(df.charge$Modified.Peptide.Seq)
-              # Treatment.Group
-              df.solutions[rows.write.out, "Treatment.Group"] <- unique(df.charge$Treatment.Group)
+              # Condition
+              df.solutions[rows.write.out, "Condition"] <- unique(df.charge$Condition)
               # Timepoint
               df.solutions[rows.write.out, "Timepoint"] <- as.numeric(unique(df.charge$Timepoint))
               # Product.Charge
@@ -907,8 +911,8 @@ for(k in seq_along(proteins)){
         df.solutions[rows.write.out, "Peptide"] <- unique(df.mod.peptide$Peptide)
         # modified.peptide
         df.solutions[rows.write.out, "Modified.Peptide"] <- unique(df.mod.peptide$Modified.Peptide.Seq)
-        # Treatment.Group
-        df.solutions[rows.write.out, "Treatment.Group"] <- unique(df.mod.peptide$Treatment.Group)[1] # take just the first element in case there are multiple values
+        # Condition
+        df.solutions[rows.write.out, "Condition"] <- unique(df.mod.peptide$Condition)[1] # take just the first element in case there are multiple values
         # Timepoint
         df.solutions[rows.write.out, "Timepoint"] <- as.numeric(unique(df.mod.peptide$Timepoint))[1] # take just the first element in case there are multiple values
         # Product.Charge
@@ -945,7 +949,7 @@ for(k in seq_along(proteins)){
 df.solutions <- df.solutions[1:(counter-1),] 
 
 # write out
-write.csv(df.solutions, file="df_solutions_date.csv", row.names = FALSE)
+write.csv(df.solutions, file="Additional_Output_Data/df_solutions.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
@@ -960,8 +964,8 @@ df.solutions <- df.solutions %>%
 df.solutions <- df.solutions %>%
   dplyr::filter(Number.Heavy.Leucines<5) %>% # keep rows with at most 4 heavy leucines
   dplyr::rename(Modified.Peptide.Seq=Modified.Peptide) %>% # adjust this name for future steps
-  dplyr::mutate(Condition=paste0(Treatment.Group, "_D", Timepoint)) %>% # create new Condition column, by merging Treatment.Group with timepoint and including "D" for day
-  dplyr::mutate(Total.Replicate.Name=paste0(Treatment.Group, "_", Replicate.Name)) %>% # create new Total.Replicate.Name column
+  dplyr::mutate(Condition.Timepoint=paste0(Condition, "_D", Timepoint)) %>% # create new Condition.Timepoint column, by merging Condition with Timepoint and including "D" for day
+  dplyr::mutate(Total.Replicate.Name=paste0(Condition.Timepoint, "_", Replicate.Name)) %>% # create new Total.Replicate.Name column
   dplyr::mutate(Area.Number.Heavy.Leucines=paste0("Area", Number.Heavy.Leucines)) %>% # create new column for casting to wide format later
   dplyr::mutate(FBC.Solution=ifelse(FBC.Solution<0, 0, ifelse(FBC.Solution>1, 1, FBC.Solution))) # FBC solution must be [0,1]: negative values are changed to 0, greater than 1 are changed to 1
 
@@ -992,24 +996,25 @@ df.solutions.filtered <- df.solutions %>%
 # Rearrange variables in df.solutions.filtered
 # and write out this filtered version
 df.solutions.filtered <- df.solutions.filtered %>%
-  select(Protein.Gene, Protein.Accession, Peptide, Modified.Peptide.Seq, Total.Replicate.Name, Condition, Treatment.Group, 
+  select(Protein.Gene, Protein.Accession, Peptide, Modified.Peptide.Seq, Total.Replicate.Name, Condition, Condition.Timepoint, 
          Replicate.Name, Timepoint, Product.Charge, Number.Heavy.Leucines, Area.Number.Heavy.Leucines, 
          everything()) # all other variables
 
 # write out
-write.csv(df.solutions.filtered, file="df_solutions_filtered_date.csv", row.names = FALSE)
+write.csv(df.solutions.filtered, file="Additional_Output_Data/df_solutions_filtered.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
 # Create Area data frame with FBC solutions cast in wide format for each peptide
-df.areas.charge <- dcast(data = df.solutions.filtered, formula = Protein.Accession + Protein.Gene + Replicate.Name + Total.Replicate.Name + Treatment.Group + Condition + Timepoint + Modified.Peptide.Seq + Product.Charge ~ Area.Number.Heavy.Leucines , value.var=c("FBC.Solution")) %>% # wide format cast
+df.areas.charge <- dcast(data = df.solutions.filtered, formula = Protein.Accession + Protein.Gene + Replicate.Name + Total.Replicate.Name + 
+                           Condition + Condition.Timepoint + Timepoint + Modified.Peptide.Seq + Product.Charge ~ Area.Number.Heavy.Leucines , value.var=c("FBC.Solution")) %>% # wide format cast
   mutate("Number.Leucine"= map_dbl(Modified.Peptide.Seq, leucine.count.fun)) %>% # add Number of Leucine column
   filter(!is.na(Area0)) %>% # keep only rows with a non-NA Area0
   mutate(Percent.Label = rowSums(select(., all_of(heavy.label.areas)), na.rm=TRUE)/rowSums(select(., contains("Area")), na.rm=TRUE)) # create new column `Percent.Label`=Label Area/Total Area
 
 # split off the 1 Leucine data; we won't be able to calculate individual `precursor pool` with this data but we can 
-# back calculate the `% new synthesized` once we have calculated the `median precursor pools` for each Condition with the other data containing multiple leucines
+# back calculate the `% new synthesized` once we have calculated the `median precursor pools` for each Condition.Timepoint with the other data containing multiple leucines
 df.areas.one.l <- df.areas.charge %>%
   filter(Number.Leucine==1 & !is.na(Area0) & !is.na(Area1)) %>% # keep all peptides with 1 Leucine where both Area0 and Area1 are not NA
   select(-c(heavy.label.areas[-1])) # drop heavy leucine columns above Area1
@@ -1156,7 +1161,7 @@ df.precursor.pool <- df.precursor.pool %>%
   mutate(Total.Area = rowSums(select(., contains("Area")), na.rm=TRUE))
 
 # write out Precursor Pool Data frame
-write.csv(df.precursor.pool, "Precursor_Pool_date.csv", row.names = FALSE)
+write.csv(df.precursor.pool, "Additional_Output_Data/Precursor_Pool.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
@@ -1169,15 +1174,15 @@ write.csv(df.precursor.pool, "Precursor_Pool_date.csv", row.names = FALSE)
 df.pp.medians <- df.precursor.pool %>%
   dplyr::group_by(Total.Replicate.Name) %>% # first group by Total Replicate Name and calculate median precursor pool
   mutate(Total.Replicate.Median.PP=median(Precursor.Pool, na.rm = TRUE)) %>%
-  dplyr::group_by(Condition) %>% # group by Condition and calculate median precursor pool
+  dplyr::group_by(Condition.Timepoint) %>% # group by Condition.Timepoint and calculate median precursor pool
   mutate(Precursor.Pool=median(Total.Replicate.Median.PP)) %>% 
   ungroup() %>% 
   arrange(Timepoint) %>% # arrange in ascending order by timepoint
-  select(Condition, Precursor.Pool) %>% # keep only these variables
-  unique() # keep only the unique conditions and their median precursor pool values
+  select(Condition.Timepoint, Precursor.Pool) %>% # keep only these variables
+  unique() # keep only unique combinations
 
 # write out Precursor Pool Data frame
-write.csv(df.pp.medians, "Precursor_Pool_PPmedians_date.csv", row.names = FALSE)
+write.csv(df.pp.medians, "Precursor_Pool_PPmedians.csv", row.names = FALSE) # written to working directory
 #------------------------------------------------------------------------------------
 
 
@@ -1194,11 +1199,11 @@ for(i in 1:length(df.precursor.pool$Condition)){
   num.leucine <- df.loop$Number.Leucine # number of leucines for control-flow
   print(i, num.leucine)
   
-  # get median Precursor Pool based on Condition
+  # get median Precursor Pool based on Condition.Timepoint
   median.pp <- df.pp.medians %>%
-    dplyr::filter(df.loop$Condition==df.pp.medians[,"Condition"]) %>% # filter based on Condition
-    dplyr::pull(Precursor.Pool) %>% # take only the value
-    round(digits=0) # round to nearest whole number since we will use median.pp to grab from a certain row which should be an integer
+    dplyr::filter(df.loop$Condition.Timepoint==df.pp.medians[,"Condition.Timepoint"]) %>% # filter based on Condition.Timepoint
+    dplyr::pull(Precursor.Pool) %>% # pull the values
+    round(digits=0) # round to nearest whole number since we will use median.pp to grab from a certain row which needs to correspond to an integer
   
   if(num.leucine==2){ # two leucines
     # Percent New Synthesied:
@@ -1257,16 +1262,16 @@ for(i in 1:length(df.precursor.pool$Condition)){
 # add new columns onto df.precursor.pool
 df.precursor.pool <- df.precursor.pool %>%
   cbind("Perc.New.Synth"=perc.new.synth) %>%
-  cbind("Avg.Turnover.Score"=1-avg.turn.score) # taking the complement of avg.turn.score; now 1 is the best score, 0 is the worst
+  cbind("Avg.Turnover.Score"=1-avg.turn.score) # take the complement of avg.turn.score; now 1 is the best score, 0 is the worst
 
 # write out
-write.csv(df.precursor.pool, "Step1_Data_Output_Skyline_multileucine_peps_date.csv", row.names = FALSE)
+write.csv(df.precursor.pool, "Additional_Output_Data/Step1_Data_Output_Skyline_multileucine_peps.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
 #------------------------------------------------------------------------------------
 # Calculate Percent Newly Synthesized for Peptides with 1 Leucine
-# we are doing this now that the median precursor pool for each Condition has been established
+# we are doing this now that the median precursor pool for each Condition.Timepoint has been established
 # since 1 Leucine peptides cannot be used to calculate individual precursor pool
 
 perc.new.synth.one.l <- rep(NA, length(df.areas.one.l$Condition)) # initialize vector for storing % New Synthesized
@@ -1275,9 +1280,9 @@ for(i in 1:length(df.areas.one.l$Condition)){
   
   df.loop <- df.areas.one.l[i, ] # subset data for this iteration
   
-  # get median Precursor Pool based on Condition
+  # get median Precursor Pool based on Condition.Timepoint
   median.pp <- df.pp.medians %>%
-    dplyr::filter(df.loop$Condition==df.pp.medians[,"Condition"]) %>% # filter based on Condition
+    dplyr::filter(df.loop$Condition.Timepoint==df.pp.medians[,"Condition.Timepoint"]) %>% # filter based on Condition.Timepoint
     dplyr::pull(Precursor.Pool) %>% # take only the value
     round(digits=0) # round to nearest whole number since we will use median.pp to grab from a certain row
   
@@ -1292,13 +1297,12 @@ for(i in 1:length(df.areas.one.l$Condition)){
 df.areas.one.l <- df.areas.one.l %>%
   cbind("Perc.New.Synth"=perc.new.synth.one.l)
 
-
-####
+# arrange by timepoint
 df.areas.one.l <- df.areas.one.l %>%
   arrange(Timepoint)
 
 # write out
-write.csv(df.areas.one.l , "Step1_Data_Output_Skyline_singleleucine_peps_date.csv", row.names = FALSE)
+write.csv(df.areas.one.l , "Additional_Output_Data/Step1_Data_Output_Skyline_singleleucine_peps.csv", row.names = FALSE)
 #------------------------------------------------------------------------------------
 
 
@@ -1310,8 +1314,8 @@ write.csv(df.areas.one.l , "Step1_Data_Output_Skyline_singleleucine_peps_date.cs
 ##
 # first relevel factors for Condition variable, for the data frames which we will use to plot data:
 
-# unique Treatment.Groups
-treatment.groups <- unique(df.precursor.pool$Treatment.Group)
+# unique conditions
+conditions <- unique(df.precursor.pool$Condition)
 
 # unique timepoints - in ascending order
 timepoints <- df.precursor.pool %>%
@@ -1319,40 +1323,41 @@ timepoints <- df.precursor.pool %>%
   pull(Timepoint) %>%
   unique()
 
-conditions.relevel <- c() # initialize vector
-# loop through timepoints, creating conditions.relevel vector with all conditions
+condition.timepoints.relevel <- c() # initialize vector
+# loop through timepoints, creating condition.timepoints.relevel vector with all condition.timepoints
 for(i in timepoints){
-  conditions.relevel <- append(conditions.relevel, paste0(treatment.groups, sep="_D", i))
+  condition.timepoints.relevel <- append(condition.timepoints.relevel, paste0(conditions, sep="_D", i))
 }
 
-# relevel Condition variable in these three data frames:
-
+# relevel Condition variable in these three data frames which are used for plotting below:
 df.pp.medians <- df.pp.medians %>%
-  mutate(Condition = fct_relevel(Condition, conditions.relevel))
+  mutate(Condition.Timepoint = fct_relevel(Condition.Timepoint, condition.timepoints.relevel))
 
 df.precursor.pool <- df.precursor.pool %>%
-  mutate(Condition = fct_relevel(Condition, conditions.relevel))
+  mutate(Condition.Timepoint = fct_relevel(Condition.Timepoint, condition.timepoints.relevel))
 
 df.areas.one.l <- df.areas.one.l %>%
-  mutate(Condition = fct_relevel(Condition, conditions.relevel))
-##
+  mutate(Condition.Timepoint = fct_relevel(Condition.Timepoint, condition.timepoints.relevel))
 
 
 # Plots:
 
 ### Peptides with one Leucine:
-# Box Plots of Percent Newly Synthesized by Condition
+# Box Plots of Percent Newly Synthesized by Condition.Timepoint
 # reorder Conditions using {Forcats} function fct_relevel
 boxplot.oneleucine.percentnewsynth <- df.areas.one.l %>%
-  ggplot(aes(y=Perc.New.Synth, fill=Condition)) + # optional: use linetype=group to use different linetypes
-  geom_boxplot(aes(y=Perc.New.Synth, col=Condition, alpha=0.1)) +
-  labs(title="Percent Newly Sythnesized Distribution by Condition - Peptides with 1 Leucine", x="Condition", y="Percent Newly Synthesized") +
-  theme_bw() 
+  ggplot(aes(y=Perc.New.Synth, fill=Condition.Timepoint)) + # optional: use linetype=group to use different linetypes
+  geom_boxplot(aes(y=Perc.New.Synth, col=Condition.Timepoint, alpha=0.1)) +
+  scale_alpha(guide='none') + # keep alpha out of legend
+  labs(title="Percent Newly Sythnesized Distribution by Condition.Timepoint - Peptides with 1 Leucine", x="Condition.Timepoint", y="Percent Newly Synthesized") +
+  theme_minimal()
 
 # save plot
 ggsave("Boxplot_Percent-Newly-Synthesized_single-leucine-peptides.pdf",
        plot = boxplot.oneleucine.percentnewsynth,
-       width = 7, height = 5,
+       path = "Additional_Output_Data",
+       width = 7, 
+       height = 5,
        units = "in", # inches
        dpi = 300)
 ####
@@ -1371,130 +1376,135 @@ ggsave("Boxplot_Percent-Newly-Synthesized_single-leucine-peptides.pdf",
 #   theme_bw() 
 
 # Density curves - Precursor Pool
-# Facet by Condition 
+# Facet by Condition.Timepoint 
 density.precursor.pool <- df.precursor.pool %>%
-  ggplot(aes(x=Precursor.Pool, fill=Condition)) + 
+  ggplot(aes(x=Precursor.Pool, fill=Condition.Timepoint)) + 
   geom_histogram(aes(y=..density..), alpha=0.2, col="black", position='identity') +
   geom_density(alpha=0.2) +
-  geom_vline(data=df.pp.medians, aes(xintercept=Precursor.Pool, col=Condition), linetype="dashed", show.legend=FALSE) +
-  facet_wrap(~ Condition, ncol = 2, scales = "fixed") +
-  labs(title="Precursor Pool Distrubtion by Condition", x="Precursor Pool", y="Density") +
-  theme_bw() 
+  scale_alpha(guide='none') + # keep alpha out of legend
+  geom_vline(data=df.pp.medians, aes(xintercept=Precursor.Pool, col=Condition.Timepoint), linetype="dashed", show.legend=FALSE) +
+  facet_wrap(~ Condition.Timepoint, ncol = 2, scales = "fixed") +
+  labs(title="Precursor Pool Distrubtion by Condition.Timepoint", x="Precursor Pool", y="Density") +
+  theme_minimal()
 
 # save plot
 ggsave("Density_Precursor-Pool.pdf",
        plot = density.precursor.pool,
-       width = 7, height = 5,
+       width = 7, 
+       height = 5,
+       path = "Additional_Output_Data",
        units = "in", # inches
        dpi = 300)
 
 
 # Density Curves - Percent Newly Synthesized 
-# Facet by Condition 
+# Facet by Condition.Timepoint 
 density.percent.new.synthesized <- df.precursor.pool %>%
-  ggplot(aes(x=Perc.New.Synth, fill=Condition)) + 
+  ggplot(aes(x=Perc.New.Synth, fill=Condition.Timepoint)) + 
   geom_histogram(aes(y=..density..), alpha=0.2, col="black", position='identity') +
   geom_density(alpha=0.2) +
-  #geom_vline(data=df.pp.medians, aes(xintercept=Precursor.Pool, col=Condition), linetype="dashed", show.legend=FALSE) +
-  facet_wrap(~ Condition, ncol = 2, scales = "fixed") +
-  labs(title="Percent Newly Synthesized Distrubtion by Condition", x="Percent Newly Synthesized", y="Density") +
-  theme_bw() 
+  scale_alpha(guide='none') + # keep alpha out of legend
+  facet_wrap(~ Condition.Timepoint, ncol = 2, scales = "fixed") +
+  labs(title="Percent Newly Synthesized Distrubtion by Condition.Timepoint", x="Percent Newly Synthesized", y="Density") +
+  theme_minimal()
 
 # save plot
 ggsave("Density_Percent-Newly-Synthesized.pdf",
        plot = density.percent.new.synthesized,
-       width = 7, height = 5,
+       width = 7, 
+       height = 5,
+       path = "Additional_Output_Data",
        units = "in", # inches
        dpi = 300)
 
-# Box Plots  Precursor Pool by Condition
+# Box Plots Precursor Pool by Condition.Timepoint
 boxplot.precursor.pool <- df.precursor.pool %>%
-  ggplot(aes(y=Precursor.Pool, fill=Condition)) + # optional: use linetype=group to use different linetypes
-  geom_boxplot(aes(y=Precursor.Pool, col=Condition, alpha=0.1)) +
-  labs(title="Precursor Pool Distribution by Condition", x="Condition", y="Precursor Pool") +
-  theme_bw()
+  ggplot(aes(y=Precursor.Pool, fill=Condition.Timepoint)) + # optional: use linetype=group to use different linetypes
+  geom_boxplot(aes(y=Precursor.Pool, col=Condition.Timepoint, alpha=0.1)) +
+  scale_alpha(guide='none') + # keep alpha out of legend
+  labs(title="Precursor Pool Distribution by Condition.Timepoint", x="Condition.Timepoint", y="Precursor Pool") +
+  theme_minimal()
 
 # save plot
 ggsave("Boxplot_Precursor-Pool.pdf",
        plot = boxplot.precursor.pool,
-       width = 7, height = 5,
+       width = 7, 
+       height = 5,
+       path = "Additional_Output_Data",
        units = "in", # inches
        dpi = 300)
 
-# Box Plots - Average Turnover Score by Condition
+# Box Plots - Average Turnover Score by Condition.Timepoint
 boxplot.avg.turnover.score <- df.precursor.pool %>%
-  ggplot(aes(y=Avg.Turnover.Score, fill=Condition)) + # optional: use linetype=group to use different linetypes
-  geom_boxplot(aes(y=Avg.Turnover.Score, col=Condition, alpha=0.1)) +
-  labs(title="Average Turnover Score Distribution by Condition", x="Condition", y="Average Turnover Score") +
-  theme_bw() 
+  ggplot(aes(y=Avg.Turnover.Score, fill=Condition.Timepoint)) + # optional: use linetype=group to use different linetypes
+  geom_boxplot(aes(y=Avg.Turnover.Score, col=Condition.Timepoint, alpha=0.1)) +
+  scale_alpha(guide='none') + # keep alpha out of legend
+  labs(title="Average Turnover Score Distribution by Condition.Timepoint", x="Condition.Timepoint", y="Average Turnover Score") +
+  theme_minimal()
 
 # save plot
 ggsave("Boxplot_Average-Turnover-Score.pdf",
        plot = boxplot.avg.turnover.score,
-       width = 7, height = 5,
+       width = 7, 
+       height = 5,
+       path = "Additional_Output_Data",
        units = "in", # inches
        dpi = 300)
 
-# Box Plots - Percent Newly Synthesized by Condition
+# Box Plots - Percent Newly Synthesized by Condition.Timepoint
 boxplot.percent.newly.synthesized <- df.precursor.pool %>%
-  ggplot(aes(y=Perc.New.Synth, fill=Condition)) + # optional: use linetype=group to use different linetypes
-  geom_boxplot(aes(y=Perc.New.Synth, col=Condition, alpha=0.1)) +
-  labs(title="Percent Newly Sythnesized Distribution by Condition", x="Condition", y="Percent Newly Synthesized") +
-  theme_bw() 
+  ggplot(aes(y=Perc.New.Synth, fill=Condition.Timepoint)) + # optional: use linetype=group to use different linetypes
+  geom_boxplot(aes(y=Perc.New.Synth, col=Condition.Timepoint, alpha=0.1)) +
+  scale_alpha(guide='none') + # keep alpha out of legend
+  labs(title="Percent Newly Sythnesized Distribution by Condition.Timepoint", x="Condition.Timepoint", y="Percent Newly Synthesized") +
+  theme_minimal()
 
 # save plot
 ggsave("Boxplot_percent-newly-synthesized.pdf",
        plot = boxplot.percent.newly.synthesized,
-       width = 7, height = 5,
+       width = 7, 
+       height = 5,
+       path = "Additional_Output_Data",
        units = "in", # inches
        dpi = 300)
 
 # Scatterplot - Percent New Synthesized vs. Precursor Pool
-# scatterplot.groups <- df.precursor.pool %>%
-#   ggplot(aes(x=Precursor.Pool, y=Perc.New.Synth, fill=Condition)) + # optional: use linetype=group to use different linetypes
-#   geom_point(aes(x=Precursor.Pool, y=Perc.New.Synth, col=Condition, alpha=0.1)) +
-#   geom_vline(data=df.pp.medians, aes(xintercept=Precursor.Pool, col=Condition), linetype="dashed", show.legend=FALSE) +
-#   labs(title="Percent New Synthesized vs. Precursor Pool", x="Precursor Pool", y="Percent New Synthesized") +
-#   theme_bw() 
-
-# Scatterplot - Percent New Synthesized vs. Precursor Pool
-# Facet by Condition
+# Facet by Condition.Timepoint
 scatterplot.percent.new.synth.vs.precursor.pool <- df.precursor.pool %>%
-  ggplot(aes(x=Precursor.Pool, y=Perc.New.Synth, fill=Condition)) + # optional: use linetype=group to use different linetypes
-  geom_point(aes(x=Precursor.Pool, y=Perc.New.Synth, col=Condition, alpha=0.1)) +
-  geom_vline(data=df.pp.medians, aes(xintercept=Precursor.Pool, col=Condition), linetype="dashed", show.legend=FALSE) +
-  facet_wrap(~ Condition, ncol = 2, scales = "fixed") + 
+  ggplot(aes(x=Precursor.Pool, y=Perc.New.Synth, fill=Condition.Timepoint)) + # optional: use linetype=group to use different linetypes
+  geom_point(aes(x=Precursor.Pool, y=Perc.New.Synth, col=Condition.Timepoint, alpha=0.1)) +
+  scale_alpha(guide='none') + # keep alpha out of legend
+  geom_vline(data=df.pp.medians, aes(xintercept=Precursor.Pool, col=Condition.Timepoint), linetype="dashed", show.legend=FALSE) +
+  facet_wrap(~ Condition.Timepoint, ncol = 2, scales = "fixed") + 
   labs(title="Percent New Synthesized vs. Precursor Pool", x="Precursor Pool", y="Percent New Synthesized") +
-  theme_bw() 
+  theme_minimal()
 
 # save plot
 ggsave("Scatterplot_Percent-Newly-Synthesized_vs_Precursor-Pool.pdf",
        plot = scatterplot.percent.new.synth.vs.precursor.pool,
-       width = 7, height = 5,
+       width = 7, 
+       height = 5,
+       path = "Additional_Output_Data",
        units = "in", # inches
        dpi = 300)
 
 # Percent New Synthesized vs. Average Turnover Score
-# avg.turnover.plot <- df.precursor.pool %>%
-#   ggplot(aes(x=Avg.Turnover.Score, y=Perc.New.Synth, fill=Condition)) + # optional: use linetype=group to use different linetypes
-#   geom_point(aes(x=Avg.Turnover.Score, y=Perc.New.Synth, col=Condition, alpha=0.1)) +
-#   labs(title="Percent New Synthesized vs. Average Turnover Score", x="Average Turnover Score", y="Percent New Synthesized") +
-#   theme_bw() 
-
-# Percent New Synthesized vs. Average Turnover Score
-# Facet by Condition 
+# Facet by Condition.Timepoint 
 scatterplot.percent.new.synth.vs.avg.turnover.score <- df.precursor.pool %>%
-  ggplot( aes(x=Avg.Turnover.Score, y=Perc.New.Synth, fill=Condition)) + # optional: use linetype=group to use different linetypes
-  geom_point(aes(x=Avg.Turnover.Score, y=Perc.New.Synth, col=Condition, alpha=0.1)) +
-  geom_hline(aes(yintercept=1)) +
-  facet_wrap(~ Condition, ncol = 2, scales = "fixed") + # can do fixed or free scales
+  ggplot( aes(x=Avg.Turnover.Score, y=Perc.New.Synth, fill=Condition.Timepoint)) + # optional: use linetype=group to use different linetypes
+  geom_point(aes(x=Avg.Turnover.Score, y=Perc.New.Synth, col=Condition.Timepoint, alpha=0.1)) +
+  scale_alpha(guide='none') + # keep alpha out of legend
+  geom_hline(aes(yintercept=1), lty=2) + # dashed line at 100% new synthesized
+  facet_wrap(~ Condition.Timepoint, ncol = 2, scales = "fixed") + # can do fixed or free scales
   labs(title="Percent New Synthesized vs. Average Turnover Score", x="Average Turnover Score", y="Percent New Synthesized") +
-  theme_bw() 
+  theme_minimal()
 
 # save plot
 ggsave("Scatterplot_Percent-Newly-Synthesized_vs_Avg-Turnover-Score.pdf",
        plot = scatterplot.percent.new.synth.vs.avg.turnover.score,
-       width = 7, height = 5,
+       width = 7, 
+       height = 5,
+       path = "Additional_Output_Data",
        units = "in", # inches
        dpi = 300)
 #------------------------------------------------------------------------------------
@@ -1508,31 +1518,35 @@ histogram.avg.turnover.score <- df.precursor.pool %>%
   ggplot(aes(x=Avg.Turnover.Score)) +
   geom_histogram(breaks=seq(0, 1, by=0.01), col="black", fill="grey", alpha=0.7) +
   labs(title="Average Turnover Score (for peptides with multiple leucines)", x="Average Turnover Score", y="Frequency") +
-  theme_bw()
+  theme_minimal()
 
 # save plot
 ggsave("Histogram_Average-Turnover-Score.pdf",
        plot = histogram.avg.turnover.score,
-       width = 7, height = 5,
+       width = 7, 
+       height = 5,
+       path = "Additional_Output_Data",
        units = "in", # inches
        dpi = 300)
 
 # average turnover score filter
 # between [0,1) where 1 is most stringent
 # the default should be 0
-ATS.threshold <- 0.70 # average turnover score value, 70% may be a good value to start
+ATS.threshold <- 0.70 # average turnover score value, 70% may be a good value to start filtering with
 
 df.pp.ats.filtered <- df.precursor.pool %>%
   filter(Avg.Turnover.Score>ATS.threshold) 
 
 density.percnew <- df.pp.ats.filtered %>%
-  mutate(Condition = fct_relevel(Condition, conditions.relevel)) %>%
-  ggplot(aes(x=Perc.New.Synth, fill=Condition)) + 
+  mutate(Condition.Timepoint = fct_relevel(Condition.Timepoint, condition.timepoints.relevel)) %>%
+  ggplot(aes(x=Perc.New.Synth, fill=Condition.Timepoint)) + 
   geom_histogram(aes(y=..density..), alpha=0.2, col="black", position='identity') +
+  scale_alpha(guide='none') + # keep alpha out of legend
   geom_density(alpha=0.2) +
-  facet_wrap(~ Condition, ncol = 2, scales = "fixed") +
+  facet_wrap(~ Condition.Timepoint, ncol = 2, scales = "fixed") +
   labs(title=paste("Percent Newly Synthesized by Condition; Average Turnover Score >", ATS.threshold) , x="Percent Newly Synthesized", y="Density") +
-  theme_bw() 
+  theme_minimal()
 #------------------------------------------------------------------------------------
 
 
+# END SCRIPT #
