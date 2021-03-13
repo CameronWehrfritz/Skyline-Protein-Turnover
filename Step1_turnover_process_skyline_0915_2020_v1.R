@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: March 12, 2021
+#updated: March 13, 2021
 
 
 # PROTEIN TURNOVER ANALYSIS
@@ -1182,7 +1182,7 @@ df.pp.medians <- df.precursor.pool %>%
   unique() # keep only unique combinations
 
 # write out Precursor Pool Data frame
-write.csv(df.pp.medians, "Precursor_Pool_PPmedians.csv", row.names = FALSE) # written to working directory
+write.csv(df.pp.medians, "Precursor_Pool_medians.csv", row.names = FALSE) # written to working directory
 #------------------------------------------------------------------------------------
 
 
@@ -1338,8 +1338,9 @@ df.precursor.pool <- df.precursor.pool %>%
 
 df.areas.one.l <- df.areas.one.l %>%
   mutate(Condition.Timepoint = fct_relevel(Condition.Timepoint, condition.timepoints.relevel))
+##
 
-
+  
 # Plots:
 
 ### Peptides with one Leucine:
