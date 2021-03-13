@@ -118,7 +118,7 @@ df.model.output <- data.frame(matrix(nrow = 2*length(conditions.loop)*length(pro
 names(df.model.output) <- col.names
 
 #Initiate PDF
-pdf(file="Additional_Output_Data/Turnover_Regressions_step2_plots.pdf")
+pdf(file="Additional_Output_Data/Regressions_custom.pdf")
 par(mfrow=c(2,3))
 
 row.index <- 1 
