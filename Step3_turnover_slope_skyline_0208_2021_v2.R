@@ -133,7 +133,7 @@ df.model.output <- data.frame(matrix(nrow = 2*length(conditions.loop)*length(pro
 names(df.model.output) <- col.names
 
 #Initiate PDF
-pdf(file="Additional_Output_Data/Regressions_origin.pdf")
+pdf(file="Regressions_origin.pdf")
 par(mfrow=c(2,3))
 
 row.index <- 1 
