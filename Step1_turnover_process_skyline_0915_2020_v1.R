@@ -3,7 +3,7 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: March 12, 2021
+#updated: March 18, 2021
 
 
 # PROTEIN TURNOVER ANALYSIS
@@ -600,7 +600,8 @@ df <- df %>%
 
 # Move most important columns to the left of the data frame, and keep all other columns on the right
 df <- df %>%
-  select(Protein.Accession, Protein.Gene, Peptide, Modified.Peptide.Seq, Replicate.Name, Condition, Timepoint, Number.Heavy.Leucines, Area, everything()) # NO COHORT - removed cohort from below on 7/24/2020 before first test run ~4:15pm
+  select(Protein.Accession, Protein.Gene, Peptide, Modified.Peptide.Seq, Replicate.Name, Condition, Timepoint, Number.Heavy.Leucines, Area, # these are the most important columns
+         everything()) # everything else follows
 #------------------------------------------------------------------------------------
 
 
@@ -633,6 +634,8 @@ names(df.solutions)[1:13] <- c("Protein.Gene", "Protein.Accession", "Peptide", "
 
 # set counter before loop
 counter <- 1
+# set progress bar
+progression <- winProgressBar(title = "Find Best Combination Progress bar", min = 0, max = nrow(df.solutions), width = 300) # MS windows progress bar
 
 # loop through PROTEINS
 for(k in seq_along(proteins)){
@@ -803,6 +806,8 @@ for(k in seq_along(proteins)){
               rows.write.out <- counter:(counter+length(unique(df.charge$Number.Heavy.Leucines))-1)
               counter <- max(rows.write.out) + 1 # increment counter
               print(counter)
+              # update progress bar
+              setWinProgressBar(progression, counter, title=paste(round(counter/nrow(df.solutions))*100,"% done - Find Best Combination Progress bar"))
               
               # Write Out to df.solutions:
               df.solutions[rows.write.out, "FBC.Solution"] <- solutions
@@ -848,6 +853,8 @@ for(k in seq_along(proteins)){
               rows.write.out <- counter:(counter+length(unique(df.charge$Number.Heavy.Leucines))-1)
               counter <- max(rows.write.out) + 1 # increment counter
               print(counter)
+              # update progress bar
+              setWinProgressBar(progression, counter, title=paste(round(counter/nrow(df.solutions))*100,"% done - Find Best Combination Progress bar"))
               
               # Write Out to df.solutions:
               #df.solutions[rows.write.out, "FBC.Solution"] <- solutions
@@ -898,6 +905,8 @@ for(k in seq_along(proteins)){
         rows.write.out <- counter:(counter+length(unique(df.mod.peptide$Number.Heavy.Leucines))-1) # replace df.charge with df.mod.peptide since for this iteration df.mod.peptide is the furthest along (df.charge does not exist)
         counter <- max(rows.write.out) + 1 # increment counter
         print(counter)
+        # update progress bar
+        setWinProgressBar(progression, counter, title=paste(round(counter/nrow(df.solutions))*100,"% done - Find Best Combination Progress bar"))
         
         # Write Out to df.solutions:
         #df.solutions[rows.write.out, "FBC.Solution"] <- solutions
@@ -938,10 +947,12 @@ for(k in seq_along(proteins)){
         }
         df.solutions[rows.write.out, "Isotope.Dot.Product"] <- IDP
       } # end else -- no solution
-      
     } #end for - modified.peptide.sequence level
   } #end for - peptide level
 } #end for - protein level
+
+# close progress bar
+close(progression)
 
 # trim any extra rows in the data frame past the counter, since there may be extranneous rows at the time of the initialization of df.solutions
 # this will leave a row of NA's at the end of df.solutions, since we've increased the counter at the end of each iteration of the loop.
@@ -1110,6 +1121,9 @@ reps <- unique(df.areas.charge$Replicate.Name)
 df.precursor.pool <- df.areas.charge %>%
   cbind("Precursor.Pool"=NA)
 
+# set progress bar
+progression <- winProgressBar(title = "Precursor Pool Progress bar", min = 0, max = nrow(df.areas.charge), width = 300)
+
 for(i in 1:length(unique(df.areas.charge$Replicate.Name))){
   df.iloop <- filter(df.areas.charge, Replicate.Name==reps[i]) # subset data by replicate
   peps <- unique(df.iloop$Modified.Peptide.Seq)
@@ -1150,11 +1164,18 @@ for(i in 1:length(unique(df.areas.charge$Replicate.Name))){
         indx <- which(distances==min(distances)) 
       } else {
         print("Else???") # should never be any 'else' cases
-      } 
-      df.precursor.pool[row.index, "Precursor.Pool"] <- as.numeric(indx) # write out the Precursor Pool to data frame
+      }
+      # write out result to the Precursor Pool to data frame
+      df.precursor.pool[row.index, "Precursor.Pool"] <- as.numeric(indx) 
+      
+      # update progress bar
+      setWinProgressBar(progression, i*j*k, title=paste(round(i*j*k/nrow(df.areas.charge), digits=4)*100,"% done - Precursor Pool Progress bar"))
     } # end for k-loop
   } # end for j-loop
 } # end for i-loop 
+
+# close progress bar
+close(progression)
 
 # add up all Areas (Area0 to max Area)
 df.precursor.pool <- df.precursor.pool %>%
@@ -1194,6 +1215,10 @@ write.csv(df.pp.medians, "Precursor_Pool_PPmedians.csv", row.names = FALSE) # wr
 # Loop
 perc.new.synth <- rep(NA, length(df.precursor.pool$Condition)) # initialize vector for storing % New Synthesized
 avg.turn.score <- rep(NA, length(df.precursor.pool$Condition)) # initialize vector for storing Average Turnover Score
+
+# set progress bar
+progression <- winProgressBar(title = "Multiple Leucine Progress bar", min = 0, max = nrow(df.precursor.pool), width = 300)
+
 for(i in 1:length(df.precursor.pool$Condition)){
   df.loop <- df.precursor.pool[i, ] # subset data for this iteration
   num.leucine <- df.loop$Number.Leucine # number of leucines for control-flow
@@ -1257,7 +1282,13 @@ for(i in 1:length(df.precursor.pool$Condition)){
     perc.new.synth[i] <- NA
     avg.turn.score[i] <- NA
   }
+  
+  # update progress bar
+  setWinProgressBar(progression, i, title=paste(round(i/nrow(df.precursor.pool), digits=4)*100,"% done - Multiple Leucine Progress bar"))
 } # end for
+
+# close progress bar
+close(progression)
 
 # add new columns onto df.precursor.pool
 df.precursor.pool <- df.precursor.pool %>%
@@ -1275,6 +1306,10 @@ write.csv(df.precursor.pool, "Additional_Output_Data/Step1_Data_Output_Skyline_m
 # since 1 Leucine peptides cannot be used to calculate individual precursor pool
 
 perc.new.synth.one.l <- rep(NA, length(df.areas.one.l$Condition)) # initialize vector for storing % New Synthesized
+
+# set progress bar
+progression <- winProgressBar(title = "Single Leucine Progress bar", min = 0, max = nrow(df.areas.one.l), width = 300)
+
 for(i in 1:length(df.areas.one.l$Condition)){
   print(i)
   
@@ -1291,7 +1326,13 @@ for(i in 1:length(df.areas.one.l$Condition)){
   O0new <- df.binom1[median.pp, 1]*df.loop[, "Area1"]/df.binom1[median.pp, 2]
   # calculate percent new synthesized: % new synthesized = (Obs0new + Obs1 + Obs2)/(Obs0 + Obs1 + Obs2)
   perc.new.synth.one.l[i] <- (O0new + df.loop[, "Area1"])/(df.loop[, "Area0"] + df.loop[, "Area1"]) 
+  
+  # update progress bar
+  setWinProgressBar(progression, i, title=paste(round(i/nrow(df.areas.one.l), digits=4)*100,"% done - Single Leucine Progress bar"))
 }
+
+# close progress bar
+close(progression)
 
 # add column onto data frame
 df.areas.one.l <- df.areas.one.l %>%
