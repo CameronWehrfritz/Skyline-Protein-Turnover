@@ -3,11 +3,11 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: March 12, 2021
+#updated: March 13, 2021
 
 # PROTEIN TURNOVER ANALYSIS
 # STEP 3:
-# NON LINEAR FIT OF TURNOVER, THROUGH THE ORIGIN with single parameter: rate of change
+# NON LINEAR FIT OF TURNOVER THROUGH THE ORIGIN, with single parameter: rate of change
 #
 # OUTPUT: 
 # i. PDF of non-linear regression plots: Percent Newly Synthesized vs. Time
@@ -50,12 +50,12 @@ data.s <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover
 # multiple leucine data set (2,3,4 leucines)
 data.m <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Additional_Output_Data/Step1_Data_Output_Skyline_multileucine_peps.csv", stringsAsFactors = F) # PC
 
-# medians of x-intercepts by treatment.group from Step 2 
+# medians of x-intercepts by condition from Step 2 
 df.x.int.medians <- read.csv("//bigrock/GibsonLab/users/Cameron/2020_0814_Skyline_Turnover_Tool/Turnover_R_scripts/Additional_Output_Data/Turnover_step2_xintercepts.csv", stringsAsFactors = F) # PC
 #------------------------------------------------------------------------------------
 
 # Reference condition
-Reference.Condition <- "OCon" # this should be assigned by the user 
+Reference.Condition <- "OCon" # this should be assigned by the user
 
 #------------------------------------------------------------------------------------
 # END CODE FOR RUNNING IN RSTUDIO
@@ -133,7 +133,7 @@ df.model.output <- data.frame(matrix(nrow = 2*length(conditions.loop)*length(pro
 names(df.model.output) <- col.names
 
 #Initiate PDF
-pdf(file="Additional_Output_Data/Turnover_Regressions_step3_plots.pdf")
+pdf(file="Regressions_origin.pdf")
 par(mfrow=c(2,3))
 
 row.index <- 1 
@@ -143,7 +143,7 @@ for(i in seq_along(unique(df$Protein.Accession))){
   # subset combined data for treatment.group and protein 
   data.protein.loop <- subset(df, Protein.Accession == prots[i]) 
   
-  # subset reference data - do this before treatment.groups loop below
+  # subset reference data - do this before conditions loop below
   data.ref <- subset(data.protein.loop, Condition==Reference.Condition) # ref will always be the user defined reference condition
   # subset variables Time and Percent.Newly.Synthesized to fit with model
   fit.ref <- subset(data.ref, select = c("Modified.Time", "Perc.New.Synth")) %>% 
@@ -176,7 +176,7 @@ for(i in seq_along(unique(df$Protein.Accession))){
           
           # write out results from models:
           
-          # REFERENCE Condition:
+          # REFERENCE CONDITION:
           # protein
           df.model.output[row.index, "Protein.Accession"] <- prots[i]
           
@@ -202,7 +202,7 @@ for(i in seq_along(unique(df$Protein.Accession))){
           df.model.output[row.index, "Res.Std.Error"] <- summary(model.ref)$sigma %>% round(., digits=4)
           
           
-          # VARIABLE Condition:
+          # VARIABLE CONDITION:
           # protein
           df.model.output[row.index+1, "Protein.Accession"] <- prots[i]
           
@@ -297,7 +297,7 @@ for(i in seq_along(unique(df$Protein.Accession))){
       df.model.output[row.index +1, "No.Points"] <-  ifelse(length(unique(data.var[, "Condition"]))==0, NA, no.points.b) # number of points in variable Condition
       
     } # end trycatch
-    # increase row.index counter by 2 each cycle, since we are writing out data for both treatment.groups (reference and variable) during each iteration, on separate rows
+    # increase row.index counter by 2 each cycle, since we are writing out data for both conditions (reference and variable) during each iteration, on separate rows
     row.index <- row.index + 2
   } # end for; Condition level
 } # end for; protein level

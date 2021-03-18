@@ -3,11 +3,11 @@
 #Schilling Lab, Buck Institute for Research on Aging
 #Novato, California, USA
 #March, 2020
-#updated: March 12, 2021
+#updated: March 13, 2021
 
 # PROTEIN TURNOVER ANALYSIS
 # STEP 4:
-# Linear model of log(Percent.Newly.Synthesized) by timepoints and treatment.groups and their interaction
+# Linear model of log(Percent.Newly.Synthesized) by timepoints and conditions and their interaction
 #
 # OUTPUT:
 # i. Data table of statistics
@@ -124,14 +124,14 @@ for(i in prots){
   # subset data from reference condition - do this prior to the conditions loop below
   data.ref <- subset(data.protein.loop, Condition==Reference.Condition) # ref refers to the user defined reference condition
   
-  # loop through treatment.groupa - in order to generate each comparison to the reference condition
+  # loop through conditions - in order to generate each comparison to the reference condition
   for(j in conditions.loop){
     
     # subset data for variable condition and reference condition; for use in combined linear model
     data.condition.loop <- subset(data.protein.loop, Condition == j | Condition == Reference.Condition )
     
     # subset data for variable condition
-    data.var <- subset(data.protein.loop, Condition==j) # var refers to the variable treatment.groups, which to compare against the user defined reference condition
+    data.var <- subset(data.protein.loop, Condition==j) # var refers to the variable condition, which will be compared against the user defined reference condition
     
     # create name of comparison
     comparison <- paste(j, "/", Reference.Condition, sep="") # variable condition vs reference condition
@@ -159,8 +159,8 @@ for(i in prots){
           model <- lm(log(1-Perc.New.Synth) ~ 0 + Condition*Modified.Time, data = data.condition.loop %>% filter(Perc.New.Synth<1)) # this model matches the model used in step 3
           
           # write out statistics from combined model
-          df.model.output[row.index, c(6:8)] <- summary(model)$coef[4, 1:3] %>% round(., digits=4) # model statistics: estimate, standard error, t value # fourth row should be the interaction term
-          df.model.output[row.index, 9] <- summary(model)$coef[4, 4] # p-value from combined linear model; not rounded, so we can sort by this variable # fourth row should be the interaction term
+          df.model.output[row.index, c(6:8)] <- summary(model)$coef[4, 1:3] %>% round(., digits=4) # model statistics: estimate, standard error, t value # fourth row should be the interaction term of condition and time variables
+          df.model.output[row.index, 9] <- summary(model)$coef[4, 4] # p-value from combined linear model; not rounded, so we can sort by this variable # fourth row should be the interaction term of condition and time variables
           df.model.output[row.index, colnames(df.model.output)=="DF"] <- summary(model)$df[2] # degrees of freedom
 
           # model reference condition against its timepoints
