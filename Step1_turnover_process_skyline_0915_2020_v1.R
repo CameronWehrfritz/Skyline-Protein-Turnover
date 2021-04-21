@@ -832,7 +832,7 @@ for(k in seq_along(proteins)){
               # Detection Qvalue
               df.solutions[rows.write.out, "Detection.Q.Value"] <- as.numeric(unique(df.charge$Detection.Q.Value))
               # Total Area MS1
-              df.solutions[rows.write.out, "Total.Area.MS1"] <- as.numeric(unique(df.charge$Total.Area.MS1))
+              df.solutions[rows.write.out, "Total.Area.MS1"] <- as.numeric(df.charge[!duplicated(df.charge$Modified.Sequence), ]$Total.Area.MS1)
               # Isotope.Dot.Product - individual IDP values; one unique per peptide by Number of Heavy Leucines
               # first create a vector of unique values based on Number Heavy Leucine ... then write them out
               IDP <- c() # initialize IDP vector
@@ -879,7 +879,7 @@ for(k in seq_along(proteins)){
               # Detection Qvalue
               df.solutions[rows.write.out, "Detection.Q.Value"] <- as.numeric(unique(df.charge$Detection.Q.Value))
               # Total Area MS1
-              df.solutions[rows.write.out, "Total.Area.MS1"] <- as.numeric(unique(df.charge$Total.Area.MS1))
+              df.solutions[rows.write.out, "Total.Area.MS1"] <- as.numeric(df.charge[!duplicated(df.charge$Modified.Sequence), ]$Total.Area.MS1) 
               # Isotope.Dot.Product - individual IDP values; one unique per peptide by Number of Heavy Leucines
               # first create a vector of unique values based on Number Heavy Leucine ... then write them out
               IDP <- c() # initialize IDP vector
